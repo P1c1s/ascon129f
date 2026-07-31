@@ -2,11 +2,155 @@
  "cells": [
   {
    "kind": 2,
-   "value": "(* --- 1. INIZIALIZZAZIONE --- *)\n(* Definizione dell'Input per ottenere 5 parole da 8 bit ciascuna *)\niv = IntegerDigits[FromDigits[\"BA\", 16], 2, 8];       (* 8 bit  -> x0 *)\nkey = IntegerDigits[FromDigits[\"AAAA\", 16], 2, 16];    (* 16 bit -> x1, x2 *)\nnonce = IntegerDigits[FromDigits[\"FFFF\", 16], 2, 16];  (* 16 bit -> x3, x4 *)\nivs={v1,v2,v3,v4,v5,v6,v7,v8};\nkeys={k1,k2,k3,k4,k5,k6,k7,k8,k9,k10,k11,k12,k13,k14,k15,k16};\nnonces={n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16};\n\n(* Matrice 5x8: Join produce 40 bit, Partition crea 5 liste da 8 bit *)\nStruct[key_,nonce_]:= Partition[Join[iv, key, nonce], 8];\n(* Costanti di Round a 8 bit per i 12 round *)\nroundConstants = IntegerDigits[#, 2, 8] & /@ {\n   16^^F0, 16^^E1, 16^^D2, 16^^C3, 16^^B4, 16^^A5, \n   16^^96, 16^^87, 16^^78, 16^^69, 16^^5A, 16^^4B\n};\n\n(* Layer 1: Addition of Round Constant *)\naddRoundConstant[stato_List, n_Integer] := ReplacePart[stato, 3 -> PolynomialMod[stato[[3]] + roundConstants[[n]], 2]];\n\n(* Layer 2: Substitution Layer (S-box 5-bit verticalmente su 8 colonne) *)\nsubstitutionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},\n  {x1, x2, x3, x4, x5} = stato;\n  \n  (* Trasponiamo per trattare ogni colonna di 5 bit *)\n  trasposta = Transpose[{x1, x2, x3, x4, x5}];\n  \n  nuovaTrasposta = Map[Function[col,\n     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]]},\n      {\n        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],\n        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],\n        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],\n        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],\n        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]\n      }\n     ]\n    ], trasposta];\n    \n  Transpose[nuovaTrasposta]\n];\n\n(* Layer 3: Linear Diffusion Layer (Rotazioni su parole da 8 bit) *)\nlinearDiffusionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5},\n  {x1, x2, x3, x4, x5} = stato;\n  x1 = PolynomialMod[x1 + RotateRight[x1, 3], 2];\n  x2 = PolynomialMod[x2 + RotateRight[x2, 1] + RotateRight[x2, 3], 2];\n  x3 = PolynomialMod[x3 + RotateRight[x3, 1] + RotateRight[x3, 2], 2];\n  x4 = PolynomialMod[x4 + RotateRight[x4, 2] + RotateRight[x4, 1], 2];\n  x5 = PolynomialMod[x5 + RotateRight[x5, 3] + RotateRight[x5, 1], 2];\n  {x1, x2, x3, x4, x5}\n];\n\n(* Permutazione del singolo Round n *)\nAsconRound[state_List, nRound_Integer] := \n  linearDiffusionLayer[substitutionLayer[addRoundConstant[state, nRound]]];\n  (* --- 3. ESECUZIONE DELL'INTERA PERMUTAZIONE A 12 ROUND --- *)\nAscon129f[key_,nonce_, rounds_] := Fold[AsconRound[#1, #2] &, Struct[key,nonce], Range[rounds]];\n\n(* Versione da usare dentro i test ... *)\nAsconNRound[key_,nonce_]:=Ascon129f [key, nonce,1];\n  \n(* Esegui tutti i 12 Round in sequenza *)\nPrint[\"Stato finale dopo 1 Round:\"];\nAscon129f[key,nonce,1] // MatrixForm\nAscon129f[keys,nonces,1] // MatrixForm\n",
+   "value": "(* Definizione dell'Input per ottenere 5 parole da 8 bit ciascuna *)\niv = IntegerDigits[FromDigits[\"BA\", 16], 2, 8];       (* 8 bit  -> x0 *)\nkey = IntegerDigits[FromDigits[\"AAAA\", 16], 2, 16];    (* 16 bit -> x1, x2 *)\nnonce = IntegerDigits[FromDigits[\"FFFF\", 16], 2, 16];  (* 16 bit -> x3, x4 *)\nivs={v1,v2,v3,v4,v5,v6,v7,v8};\nkeys={k1,k2,k3,k4,k5,k6,k7,k8,k9,k10,k11,k12,k13,k14,k15,k16};\nnonces={n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16};\n\n(* Matrice 5x8: Join produce 40 bit, Partition crea 5 liste da 8 bit *)\nStruct[key_,nonce_]:= Partition[Join[iv, key, nonce], 8]\n;\n(* Costanti di Round a 8 bit per i 12 round *)\nroundConstants = IntegerDigits[#, 2, 8] & /@ {\n   16^^F0, 16^^E1, 16^^D2, 16^^C3, 16^^B4, 16^^A5, \n   16^^96, 16^^87, 16^^78, 16^^69, 16^^5A, 16^^4B\n};\n\n(* Layer 1: Addition of Round Constant *)\naddRoundConstant[stato_List, n_Integer] := ReplacePart[stato, 3 -> PolynomialMod[stato[[3]] + roundConstants[[n]], 2]];\n\n(* Layer 2: Substitution Layer (S-box 5-bit verticalmente su 8 colonne) *)\nsubstitutionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},\n  {x1, x2, x3, x4, x5} = stato;\n  \n  (* Trasponiamo per trattare ogni colonna di 5 bit *)\n  trasposta = Transpose[{x1, x2, x3, x4, x5}];\n  \n  nuovaTrasposta = Map[Function[col,\n     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]]},\n      {\n        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],\n        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],\n        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],\n        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],\n        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]\n      }\n     ]\n    ], trasposta];\n    \n  Transpose[nuovaTrasposta]\n];\n\n(* Layer 3: Linear Diffusion Layer (Rotazioni su parole da 8 bit) *)\nlinearDiffusionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5},\n  {x1, x2, x3, x4, x5} = stato;\n  x1 = PolynomialMod[x1 + RotateRight[x1, 3], 2];\n  x2 = PolynomialMod[x2 + RotateRight[x2, 1] + RotateRight[x2, 3], 2];\n  x3 = PolynomialMod[x3 + RotateRight[x3, 1] + RotateRight[x3, 2], 2];\n  x4 = PolynomialMod[x4 + RotateRight[x4, 2] + RotateRight[x4, 1], 2];\n  x5 = PolynomialMod[x5 + RotateRight[x5, 3] + RotateRight[x5, 1], 2];\n  {x1, x2, x3, x4, x5}\n];\n\n(* Permutazione del singolo Round n *)\nAsconRound[state_List, nRound_Integer]:=linearDiffusionLayer[substitutionLayer[addRoundConstant[state, nRound]]];\n\n(* --- 3. ESECUZIONE DELL'INTERA PERMUTAZIONE A 12 ROUND --- *)\nAscon129f[key_,nonce_, rounds_]:=Fold[AsconRound[#1, #2] &, Struct[key,nonce], Range[rounds]];\n\n(* Versione da usare dentro i test ... *)\nAsconNRound[key_,nonce_]:=Ascon129f [key, nonce,1];\n",
    "languageId": "wolfram",
    "outputs": [],
    "metadata": {},
    "executionSummary": {}
+  },
+  {
+   "kind": 2,
+   "value": "Print[\"Stato numerico dopo 1 Round:\"];\nAscon129f[key,nonce,1] // MatrixForm\nPrint[\"Stato simbolico dopo 1 Round, andando avanti con i round successivi, si nota subito un fenomeno tipico dell'analisi simbolica della S-box e delle permutazioni in Ascon: il polinomio esplode (ossia si verifica un'esplosione algebrica del polinomio)\"];\nAscon129f[keys,nonces,1] // MatrixForm\n",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<pre>Stato numerico dopo 1 Round:\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Stato numerico dopo 1 Round:\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "d76ad2c2-ebd6-4f61-98e9-88a44911fcff",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wrow><w></w><wb>(</wb><w>⁠</w><wgrid style=\"grid-template-columns:repeat(8,max-content);\"><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w><w><w>0</w></w><w><w>0</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>0</w></w><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>1</w></w><w><w>0</w></w><w><w>1</w></w><w><w>1</w></w><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w><w><w>1</w></w><w><w>0</w></w></wgrid><w>⁠</w><wb>)</wb></wrow></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "MatrixForm[{{0, 1, 0, 0, 1, 0, 0, 0}, {1, 1, 1, 1, 1, 1, 1, 0}, {0, 1, 0, 0, 1, 0, 1, 1}, {1, 1, 1, 1, 1, 1, 0, 1}, {1, 0, 1, 0, 1, 0, 1, 0}}]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "85eba773-5c6f-489b-9bc4-c7eaea192eb8",
+     "metadata": {
+      "cellLabel": "Out[51]//MatrixForm= ",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Stato simbolico dopo 1 Round, andando avanti con i round successivi, si nota\\\n \n&gt;   subito un fenomeno tipico dell'analisi simbolica della S-box e delle\\\n \n&gt;   permutazioni in Ascon: il polinomio esplode (ossia si verifica\\\n \n&gt;   un'esplosione algebrica del polinomio)\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Stato simbolico dopo 1 Round, andando avanti con i round successivi, si nota\\\\\\n \\n>   subito un fenomeno tipico dell'analisi simbolica della S-box e delle\\\\\\n \\n>   permutazioni in Ascon: il polinomio esplode (ossia si verifica\\\\\\n \\n>   un'esplosione algebrica del polinomio)\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "6fcf7b57-2676-457d-b08f-4fb6a8b3376e",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wrow><w></w><wb>(</wb><w>⁠</w><wgrid style=\"grid-template-columns:repeat(8,max-content);\"><w><wrow><w></w><w>k1</w><w>+</w><w>k14</w><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><w>n1</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k15</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n2</w><w>+</w><w>n7</w></wrow></w><w><wrow><w></w><w>k11</w><w>+</w><w>k16</w><w>+</w><w>k3</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n3</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k12</w><w>+</w><w>k4</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><w>n1</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n4</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k13</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n2</w><w>+</w><w>n5</w></wrow></w><w><wrow><w></w><w>k11</w><w>+</w><w>k14</w><w>+</w><w>k3</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n3</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k12</w><w>+</w><w>k15</w><w>+</w><w>k4</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n4</w><w>+</w><w>n7</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k13</w><w>+</w><w>k16</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n5</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>k14</w><w>+</w><w>k16</w><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>n1</w></wrow><w>+</w><wrow><w></w><w>k9</w><w></w><w>n1</w></wrow><w>+</w><w>n14</w><w>+</w><w>n16</w><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n6</w></wrow><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>n8</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n8</w></wrow><w>+</w><w>n9</w></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k15</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><w>k7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>n1</w></wrow><w>+</w><wrow><w></w><w>k9</w><w></w><w>n1</w></wrow><w>+</w><w>n10</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n2</w></wrow><w>+</w><w>n7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n7</w></wrow><w>+</w><w>n9</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k16</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>n10</w><w>+</w><w>n11</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n3</w></wrow><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>n8</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>k11</w><w>+</w><w>k12</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>n1</w></wrow><w>+</w><wrow><w></w><w>k9</w><w></w><w>n1</w></wrow><w>+</w><w>n11</w><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n4</w></wrow><w>+</w><w>n9</w></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>n10</w><w>+</w><w>n12</w><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n4</w></wrow><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n5</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>n11</w><w>+</w><w>n13</w><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n3</w></wrow><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n5</w></wrow><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n6</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k12</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>k7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>n12</w><w>+</w><w>n14</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n4</w></wrow><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n6</w></wrow><w>+</w><w>n7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n7</w></wrow></wrow></w><w><wrow><w></w><w>k13</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>n13</w><w>+</w><w>n15</w><w>+</w><w>n16</w><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n5</w></wrow><w>+</w><w>n7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n7</w></wrow><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>n8</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n15</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>n15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>n16</w><w></w><w>n8</w></wrow><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>n1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k16</w><w>+</w><w>k2</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>n10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>n16</w><w></w><w>n8</w></wrow><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>n1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n11</w><w>+</w><wrow><w></w><w>n10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>n11</w><w></w><w>n3</w></wrow><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>n1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>n10</w><w>+</w><w>n11</w><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>n10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>n11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>n12</w><w></w><w>n4</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>k5</w><w>+</w><w>n11</w><w>+</w><w>n12</w><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>n11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>n12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>n13</w><w></w><w>n5</w></wrow></wrow></w><w><wrow><w></w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k4</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>n12</w><w>+</w><w>n13</w><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>n12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>n13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>n14</w><w></w><w>n6</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>n13</w><w>+</w><w>n14</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>n13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>n14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>n15</w><w></w><w>n7</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>n14</w><w>+</w><w>n15</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>n14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>n15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>n16</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n16</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k16</w><w>+</w><w>k2</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n16</w><w>+</w><w>n2</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n2</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>n10</w><w>+</w><w>n2</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>k5</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k4</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>n14</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>n14</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>n14</w><w>+</w><w>n16</w><w>+</w><w>n6</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>k6</w><w>+</w><w>k8</w><w>+</w><w>n1</w><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n6</w><w>+</w><w>n8</w><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k2</w><w>+</w><w>n1</w><w>+</w><w>n10</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n2</w><w>+</w><w>n7</w><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k2</w><w>+</w><w>k8</w><w>+</w><w>n10</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><w>n11</w><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n2</w><w>+</w><w>n3</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>n1</w><w>+</w><w>n11</w><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n3</w><w>+</w><w>n4</w><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k2</w><w>+</w><w>n10</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n2</w><w>+</w><w>n4</w><w>+</w><w>n5</w></wrow></w><w><wrow><w></w><w>k6</w><w>+</w><w>n11</w><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n3</w><w>+</w><w>n5</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>k6</w><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n4</w><w>+</w><w>n6</w><w>+</w><w>n7</w></wrow></w><w><wrow><w></w><w>k8</w><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n5</w><w>+</w><w>n7</w><w>+</w><w>n8</w></wrow></w></wgrid><w>⁠</w><wb>)</wb></wrow></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "MatrixForm[{{k1 + k14 + k6 + k14*k6 + k9 + k1*k9 + n1 + k6*n14 + n6 + k1*n9, k10 + k15 + k10*k2 + k15*k7 + k2*n10 + k7*n15 + n2 + n7, k11 + k16 + k3 + k11*k3 + k8 + k16*k8 + k3*n11 + k8*n16 + n3 + n8, k1 + k12 + k4 + k12*k4 + k9 + k1*k9 + n1 + k4*n12 + n4 + k1*n9, k10 + k13 + k10*k2 + k13*k5 + k2*n10 + k5*n13 + n2 + n5, k11 + k14 + k3 + k11*k3 + k6 + k14*k6 + k3*n11 + k6*n14 + n3 + n6, 1 + k12 + k15 + k4 + k12*k4 + k15*k7 + k4*n12 + k7*n15 + n4 + n7, 1 + k13 + k16 + k13*k5 + k8 + k16*k8 + k5*n13 + k8*n16 + n5 + n8}, {k14 + k16 + k6 + k14*k6 + k8 + k16*k8 + k9 + k1*k9 + k1*n1 + k9*n1 + n14 + n16 + n6 + k14*n6 + k6*n6 + n8 + k16*n8 + k8*n8 + n9, k10 + k15 + k10*k2 + k7 + k15*k7 + k9 + k1*k9 + k1*n1 + k9*n1 + n10 + n15 + k10*n2 + k2*n2 + n7 + k15*n7 + k7*n7 + n9, 1 + k10 + k11 + k16 + k10*k2 + k11*k3 + k8 + k16*k8 + n10 + n11 + n16 + k10*n2 + k2*n2 + k11*n3 + k3*n3 + n8 + k16*n8 + k8*n8, k11 + k12 + k11*k3 + k12*k4 + k9 + k1*k9 + k1*n1 + k9*n1 + n11 + n12 + k11*n3 + k3*n3 + k12*n4 + k4*n4 + n9, k10 + k12 + k13 + k10*k2 + k12*k4 + k5 + k13*k5 + n10 + n12 + n13 + k10*n2 + k2*n2 + k12*n4 + k4*n4 + n5 + k13*n5 + k5*n5, 1 + k11 + k13 + k14 + k11*k3 + k5 + k13*k5 + k6 + k14*k6 + n11 + n13 + n14 + k11*n3 + k3*n3 + n5 + k13*n5 + k5*n5 + n6 + k14*n6 + k6*n6, 1 + k12 + k14 + k15 + k12*k4 + k6 + k14*k6 + k7 + k15*k7 + n12 + n14 + n15 + k12*n4 + k4*n4 + n6 + k14*n6 + k6*n6 + n7 + k15*n7 + k7*n7, k13 + k15 + k16 + k5 + k13*k5 + k7 + k15*k7 + k8 + k16*k8 + n13 + n15 + n16 + n5 + k13*n5 + k5*n5 + n7 + k15*n7 + k7*n7 + n8 + k16*n8 + k8*n8}, {k1 + k15 + k16 + k7 + k8 + k9 + n15 + n16 + n15*n7 + n16*n8 + n9 + n1*n9, 1 + k1 + k10 + k16 + k2 + k8 + k9 + n10 + n16 + n10*n2 + n16*n8 + n9 + n1*n9, k1 + k10 + k11 + k2 + k3 + k9 + n10 + n11 + n10*n2 + n11*n3 + n9 + n1*n9, k10 + k11 + k12 + k2 + k3 + k4 + n10 + n11 + n12 + n10*n2 + n11*n3 + n12*n4, 1 + k11 + k12 + k13 + k3 + k4 + k5 + n11 + n12 + n13 + n11*n3 + n12*n4 + n13*n5, k12 + k13 + k14 + k4 + k5 + k6 + n12 + n13 + n14 + n12*n4 + n13*n5 + n14*n6, 1 + k13 + k14 + k15 + k5 + k6 + k7 + n13 + n14 + n15 + n13*n5 + n14*n6 + n15*n7, 1 + k14 + k15 + k16 + k6 + k7 + k8 + n14 + n15 + n16 + n14*n6 + n15*n7 + n16*n8}, {1 + k1 + k15 + k16 + k7 + k8 + k9 + n16 + n8, 1 + k1 + k10 + k16 + k2 + k8 + k9 + n10 + n16 + n2 + n8, 1 + k1 + k10 + k11 + k2 + k3 + k9 + n10 + n2, 1 + k10 + k11 + k12 + k2 + k3 + k4 + n10 + n2, 1 + k11 + k12 + k13 + k3 + k4 + k5, 1 + k12 + k13 + k14 + k4 + k5 + k6 + n14 + n6, k13 + k14 + k15 + k5 + k6 + k7 + n14 + n6, 1 + k14 + k15 + k16 + k6 + k7 + k8 + n14 + n16 + n6 + n8}, {k6 + k8 + n1 + n14 + k6*n14 + n16 + k8*n16 + n6 + n8 + n9 + k1*n9, k2 + n1 + n10 + k2*n10 + n15 + k7*n15 + n2 + n7 + n9 + k1*n9, k2 + k8 + n10 + k2*n10 + n11 + k3*n11 + n16 + k8*n16 + n2 + n3 + n8, n1 + n11 + k3*n11 + n12 + k4*n12 + n3 + n4 + n9 + k1*n9, k2 + n10 + k2*n10 + n12 + k4*n12 + n13 + k5*n13 + n2 + n4 + n5, k6 + n11 + k3*n11 + n13 + k5*n13 + n14 + k6*n14 + n3 + n5 + n6, k6 + n12 + k4*n12 + n14 + k6*n14 + n15 + k7*n15 + n4 + n6 + n7, k8 + n13 + k5*n13 + n15 + k7*n15 + n16 + k8*n16 + n5 + n7 + n8}}]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "f70234be-7a0a-44f4-85e0-b962340c5b67",
+     "metadata": {
+      "cellLabel": "Out[53]//MatrixForm= ",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {}
+  },
+  {
+   "kind": 2,
+   "value": "(* Converte una stringa di testo in una lista di liste di bit a 8-bit per carattere *)\nStringToBits[text_String] := IntegerDigits[ToCharacterCode[text],2,8];\n\n(* Converte una lista di liste di bit a 8-bit per carattere in una stringa *)\nBitsToString[bits_List] := FromCharacterCode[FromDigits[#, 2] & /@ bits];\n\n\n(* Funzione di cifratura per una lista di byte/blocchi da 8 bit *)\nAsconEncrypt[messaggio_List, key_, nonce_] := Module[\n  {stato, cifrato = {}, cBlock},\n  \n  (* 1. Inizializzazione: Permutazione iniziale a 12 round *)\n  stato = Ascon129f[key, nonce, 12];\n  \n  (* 2. Cifratura blocco per blocco (8 bit alla volta) *)\n  Do[\n    (* XOR tra il byte di messaggio e il keystream (stato[[1]]) *)\n    cBlock = PolynomialMod[mBlock + stato[[1]], 2];\n    AppendTo[cifrato, cBlock];\n    \n    (* Iniezione del testo cifrato nella prima riga dello stato *)\n    stato = ReplacePart[stato, 1 -> cBlock];\n    \n    (* Permutazione intermedia (es. 6 round per la fase di cifratura) *)\n    stato = Fold[AsconRound[#1, #2] &, stato, Range[6]], \n    \n    {mBlock, messaggio}\n  ];\n  \n  cifrato\n];\n\n\n(* Funzione di decifratura per una lista di blocchi cifrati da 8 bit *)\nAsconDecrypt[cifrato_List, key_, nonce_] := Module[\n  {stato, messaggioChiaro = {}, mBlock},\n  \n  (* 1. Inizializzazione: Permutazione iniziale a 12 round (uguale alla cifratura) *)\n  stato = Ascon129f[key, nonce, 12];\n  \n  (* 2. Decifratura blocco per blocco (8 bit alla volta) *)\n  Do[\n    (* XOR tra il byte cifrato e il keystream (stato[[1]]) per riottenere il chiaro *)\n    mBlock = PolynomialMod[cBlock + stato[[1]], 2];\n    AppendTo[messaggioChiaro, mBlock];\n    \n    (* Ripristino dello stato: inserimento del testo cifrato nella prima riga *)\n    stato = ReplacePart[stato, 1 -> cBlock];\n    \n    (* Permutazione intermedia (6 round) *)\n    stato = Fold[AsconRound[#1, #2] &, stato, Range[6]], \n    \n    {cBlock, cifrato}\n  ];\n  \n  messaggioChiaro\n];\n\n\n(* 1. Definizione messaggio di prova (3 byte) *)\nmsgOriginale = \"Testo di prova\";\nmsgOriginaleBits = StringToBits[msgOriginale];\n\n(* 2. Cifratura e Decifratura *)\ntestoCifrato = AsconEncrypt[msgOriginaleBits, key, nonce];\nmsgDecifrato = AsconDecrypt[testoCifrato, key, nonce];\n\nPrint[\"Il testo in chiaro e': \", msgOriginale]\nPrint[\"Il testo cifrato e': \", BitsToString[testoCifrato]]\nPrint[\"Il testo decifrato e': \", BitsToString[msgDecifrato]]\n\n\n",
+   "languageId": "wolfram",
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<pre>Il testo in chiaro e': Testo di prova\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Il testo in chiaro e': Testo di prova\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "dfcea85d-cc89-4a65-aca3-5bc2354e5d8e",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Il testo cifrato e': \u0019-Â\"Ã¨Â¨DÂÃ²\u0003Ã¶Ã1\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Il testo cifrato e': \u0019-Â\\\"Ã¨Â¨DÂÃ²\u0003Ã¶Ã1\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "317c7661-fe0d-46dd-9cb0-7aa34b4a9512",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Il testo decifrato e': Testo di prova\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Il testo decifrato e': Testo di prova\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "0be81a88-9844-4baa-9acb-ee9f8a22d9e1",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    }
+   ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785487622707,
+     "endTime": 1785487623622
+    },
+    "executionOrder": 385,
+    "success": true
+   }
   },
   {
    "kind": 2,
