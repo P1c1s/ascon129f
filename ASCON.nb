@@ -1,0 +1,202 @@
+(* Definizione dell'Input per ottenere 5 parole da 8 bit ciascuna *)
+iv = IntegerDigits[FromDigits["BA", 16], 2, 8];       (* 8 bit  -> x0 *)
+key = IntegerDigits[FromDigits["AAAA", 16], 2, 16];    (* 16 bit -> x1, x2 *)
+nonce = IntegerDigits[FromDigits["FFFF", 16], 2, 16];  (* 16 bit -> x3, x4 *)
+ivs={v1,v2,v3,v4,v5,v6,v7,v8};
+keys={k1,k2,k3,k4,k5,k6,k7,k8,k9,k10,k11,k12,k13,k14,k15,k16};
+nonces={n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16};
+
+(* Matrice 5x8: Join produce 40 bit, Partition crea 5 liste da 8 bit *)
+Struct[key_,nonce_]:= Partition[Join[iv, key, nonce], 8]
+
+(* Costanti di Round a 8 bit per i 12 round *)
+roundConstants = IntegerDigits[#, 2, 8] & /@ {
+   16^^F0, 16^^E1, 16^^D2, 16^^C3, 16^^B4, 16^^A5, 
+   16^^96, 16^^87, 16^^78, 16^^69, 16^^5A, 16^^4B
+};
+
+(* Layer 1: Addition of Round Constant *)
+addRoundConstant[stato_List, n_Integer] := ReplacePart[stato, 3 -> PolynomialMod[stato[[3]] + roundConstants[[n]], 2]];
+
+(* Layer 2: Substitution Layer (S-box 5-bit verticalmente su 8 colonne) *)
+substitutionLayer[stato_] := Module[
+  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},
+  {x1, x2, x3, x4, x5} = stato;
+  
+  (* Trasponiamo per trattare ogni colonna di 5 bit *)
+  trasposta = Transpose[{x1, x2, x3, x4, x5}];
+  
+  nuovaTrasposta = Map[Function[col,
+     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]]},
+      {
+        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],
+        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],
+        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],
+        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],
+        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]
+      }
+     ]
+    ], trasposta];
+    
+  Transpose[nuovaTrasposta]
+];
+
+(* Layer 3: Linear Diffusion Layer (Rotazioni su parole da 8 bit) *)
+linearDiffusionLayer[stato_] := Module[
+  {x1, x2, x3, x4, x5},
+  {x1, x2, x3, x4, x5} = stato;
+  x1 = PolynomialMod[x1 + RotateRight[x1, 3], 2];
+  x2 = PolynomialMod[x2 + RotateRight[x2, 1] + RotateRight[x2, 3], 2];
+  x3 = PolynomialMod[x3 + RotateRight[x3, 1] + RotateRight[x3, 2], 2];
+  x4 = PolynomialMod[x4 + RotateRight[x4, 2] + RotateRight[x4, 1], 2];
+  x5 = PolynomialMod[x5 + RotateRight[x5, 3] + RotateRight[x5, 1], 2];
+  {x1, x2, x3, x4, x5}
+];
+
+(* Permutazione del singolo Round n *)
+AsconRound[state_List, nRound_Integer]:=linearDiffusionLayer[substitutionLayer[addRoundConstant[state, nRound]]];
+
+(* --- 3. ESECUZIONE DELL'INTERA PERMUTAZIONE A 12 ROUND --- *)
+Ascon129f[key_,nonce_, rounds_]:=Fold[AsconRound[#1, #2] &, Struct[key,nonce], Range[rounds]];
+(*ATTACCO*)
+
+(* Versione da usare dentro i test ... *)
+AsconNRound[key_,nonce_]:=Ascon129f [key, nonce, 3];
+
+(*GENERA GLI IV*)
+GenCombNonce[maxterm_List] := Module[{d, zv},
+  d = Length[maxterm];
+  zv = Table[0, Length[nonce]];
+  
+  Map[
+    Module[{ztmp = zv},
+      ztmp[[maxterm]] = IntegerDigits[#, 2, d];
+      ztmp
+    ] &, 
+    Range[0, 2^d - 1]
+  ]
+]
+
+(* Operotore "Somma" dei test *)
+MatrixOr[a_List,b_List] := Mod[a+b + a*b,2]
+
+(* Test di linearità per BLR *)
+LinearityTest[key1_List,key2_List,nonce_List]:=
+Mod[
+Total[Map[AsconNRound [key1,#] &, nonce ]]+
+Total[Map[AsconNRound [key2,#]  &, nonce ]]+
+Total[Map[AsconNRound [ ConstantArray[0,Length[key]], #] &, nonce ]] +  (*alpha zero*)
+Total[Map[ AsconNRound[Mod[key1 + key2,2],#] &, nonce]]       (*elelmento di ugualianza*)
+,2]
+
+
+(* Prodotto cartesiano chiavi random *)
+KeyPairAll = Permutations[Rest @ Tuples[{0, 1}, #1], {#2}] &;
+
+RandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1}, keyBits], RandomInteger[{0, 1}, keyBits]}, {numPairs} ];
+
+
+(* Deve dare esito positivo il 90% dei casi date due chiavi random, Manuel Blum, Michael Luby e Ronitt Rubinfeld *)
+BLR[mt_] := Fold[
+   MatrixOr, 
+   LinearityTest[#1, #2, GenCombNonce[mt]] & @@@RandomKeyPairs[16,100]
+];
+
+
+
+(**)
+GeneraTriade[keys_,nonce_] := Module[{alpha0},
+   (* Matrice 3x3 per la chiave nulla *)
+   alpha0 = Mod[Total[AsconNRound[ConstantArray[0,Length[key]],#] & /@ nonce], 2];
+
+   (*Calcolo per ciascuna chiave *)
+   Map[
+      Function[k, Mod[Total[AsconNRound[k,#] & /@ nonce] + alpha0, 2]], 
+      keys
+   ]
+]
+
+(* A partire da una lista di indici genera le varie combinazioni di grado dei maxterm *)
+GenerateMaxterms[indexes_List, degree_] := Flatten[Map[Subsets[indexes,{#}]&, degree], 1]
+
+(* Prende n elemnti a caso dalla mega lista di maxterm *)
+RandomMaxterm[num_]:= RandomSample[GenerateMaxterms[maxtermsIndexes,{1,2,3}], num]
+
+
+(* CI SERVIRA' PER AUTOMATIZZARE IL TUTTO*)
+(*maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};*)
+
+maxtermsIndexes = Range[Length[nonce]];
+
+(*maxterms = GenerateMaxterms[maxtermsIndexes,{1,2}]*)
+
+maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};
+
+maxterms = RandomMaxterm[20]
+
+
+
+(* Applica a tutta la lista di maxterm *)
+risultati = BLR /@ maxterms;
+positionZeroLista = Map[Position[#, 0] &, risultati];
+
+
+
+
+(*Definizione delle chiavi unitarie per la triade*)
+keysUnit = IdentityMatrix[16];
+
+
+(*Lista elementi [S(v#,k1),S(v#,k2),S(v#,k3)] iterando i maxterm*)
+(*TriadiLista = Map[keysUnit, GeneraTriade[GenCombNonce[#]] &, maxterms]; *)
+TriadiLista = GeneraTriade[keysUnit, GenCombNonce[#]] & /@ maxterms;
+
+(* Applicazione con MapThread su tutte le triadi e le relative liste di indici *)
+matriceCoeffLista = MapThread[
+   Function[{triade, indici},
+      (* triade[[1]] è m1, triade[[2]] è m2, triade[[3]] è m3 *)
+      (*{triade[[1, #1, #2]], triade[[2, #1, #2]], triade[[3, #1, #2]]} & @@@ indici*)
+      Table[triade[[i, #1, #2]], {i, 1, 16}] & @@@ indici
+   ],
+   {TriadiLista, positionZeroLista}
+];
+
+CUBEONLINE[key_List, nonce_List] := Mod[Total[Map[AsconNRound[key, #] &, nonce]]+Total[Map[AsconNRound[ConstantArray[0,Length[key]], #] &, nonce ]],2]
+
+
+(* Genera una lista di matrici 5*8 dei termini noti, una per ogni maxterm *)
+terminiNotiLista = Map[
+   CUBEONLINE[key, GenCombNonce[#]] &, 
+   maxterms
+];
+
+(* Estrazione parallela degli elementi specificati dalle coordinate di ciascuna matrice *)
+terminiNotiLista = MapThread[
+   Function[{matriceTN, indici},
+      matriceTN[[#1, #2]] & @@@ indici
+   ],
+   {terminiNotiLista, positionZeroLista}
+];
+
+(* Print["SISTEMA FINALE"] *)
+MC=Flatten[matriceCoeffLista,1];
+TN=Flatten[terminiNotiLista,1];
+
+
+(* 1. Crea la matrice aumentata [M | N] *)
+aug = Join[MC, Partition[TN, 1], 2];
+
+(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)
+rref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];
+
+(* 3. Estrazione delle nuove M e N ridotte *)
+MCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];
+TNridotta = rref[[All, -1]];
+
+Print[MatrixForm[MCridotta] ," x ", MatrixForm[keys]," = ", MatrixForm[TNridotta]]
+
+
+
+Print["Bit della chiave:         ", key]
+(* Print["Bit della chiave trovata: ", LinearSolve[MC, TN, Modulus->2]] *)
+Print["Bit della chiave trovata: ", LinearSolve[MCridotta, TNridotta, Modulus->2]]
