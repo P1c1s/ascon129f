@@ -2,43 +2,9 @@
  "cells": [
   {
    "kind": 2,
-   "value": "In[275]:= ClearAll[\"Global`*\"]\n(* S3X-box*)\nivs = {v1, v2, v3, v4, v5, v6};\nks = {k1, k2, k3};\niv = {1, 1, 1, 1, 1, 1};\nk = {0, 1, 0};\n(* Funzione SBox*)\nshiftRows[s_List] := s[[ {2, 3, 1} ]]\nshiftColumns[s_List] := Transpose[s]\nsubstitution[s_List] := PolynomialMod[\n      Partition[{\n            s[[1]][[1]] *s[[2]][[2]]*s[[1]][[2]]+ s[[1]][[2]], \n            s[[1]][[2]]*s[[2]][[1]] + s[[1]][[2]]*s[[1]][[1]], \n            s[[2]][[1]]*s[[1]][[3]], \n            s[[1]][[1]]*s[[2]][[2]]*s[[1]][[2]],\n          s[[1]][[1]] + s[[1]][[2]]*s[[3]][[3]], \n            s[[1]][[2]]*s[[2]][[1]] + s[[1]][[2]], \n            s[[3]][[1]]*s[[1]][[1]] + s[[1]][[2]]*s[[2]][[1]], \n            s[[1]][[1]]*s[[2]][[2]] + s[[3]][[1]]*s[[3]][[2]] + \n          s[[2]][[1]]*s[[2]][[3]] + s[[2]][[3]],\n          s[[3]][[2]] + s[[1]][[3]]*s[[2]][[2]]\n          }, 3], \n      2\n    ]\n \n(*substitution2[s_List]:=Module[{a,b,c,d,e,f,g,h,i}, {{a,b,c}, {d,e,f},{g,h,i}}=s;\nMod[{{a b,},{},{}},2]\n]\n*)\n(*Crea una matrice 3x3 combiando IV e K*)\nStruct[iv_, k_] := Append[Partition[iv, 3], k];\n(*Defisce la S-Box*)\nS3xBox[iv_, k_] := substitution[shiftColumns[shiftRows[Struct[iv, k]]]];\n\n(*VARIABILI PER generatoreComb3*)\n\n        \n(*GENERA GLI IV*)\ngeneratoreComb3[maxterm_List] := Module[{d, zv},\n  d = Length[maxterm];\n  zv = Table[0, 6];\n  \n  Map[\n    Module[{ztmp = zv},\n      ztmp[[maxterm]] = IntegerDigits[#, 2, d];\n      ztmp\n    ] &, \n    Range[0, 2^d - 1]\n  ]\n]\n\n\n\nMatrixOr[a_List,b_List] := Mod[a+b + a*b,2]\n\nTestLinearita2[key1_List,key2_List,iv_List]:=\nMod[\nTotal[Map[S3xBox [#, key1] &, iv ]]+\nTotal[Map[S3xBox [#, key2] &, iv ]]+\nTotal[Map[S3xBox [#, ConstantArray[0,Length[key1]]] &, iv ]] +  (*alpha zero*)\nTotal[Map[S3xBox[#, key1 + key2] &, iv]]       (*elelmento di ugualianza*)\n,2]\n\n(*cubeoffline-> se BLR ha successo, si fanno xor variazioni del maxterm con k1 (m1), poi k2 (m2), poi k3(m3)*)\n(*per matrice dei coefficienti -> [m1[0][0], m2[0][0], m3[0][0]], [m1[0][1]....], , escludendo elementi 0,0,0*)\n\nPrint[\"STAMPA simbolico\"]\nS3xBox[ivs,ks] //TableForm\n\n\n(*Prodotto cartesiano chiavi random*)\nKeyPairAll = Permutations[Rest @ Tuples[{0, 1}, #1], {#2}] &;\n\n\n(*Restituisce una matrice di zero ed uno rispetto a BLR (iterato)*)\nCalcolaLineaMaxterm[mt_] := Fold[\n   MatrixOr, \n   TestLinearita2[#1, #2, generatoreComb3[{mt}]] & @@@ KeyPairAll[3, 2]\n];\n\n(* CI SERVIRA' PER AUTOMATIZZARE IL TUTTO*)\nmaxterms={{4},{6}};\n\n(* Applica a tutta la lista di maxterm *)\nrisultati = CalcolaLineaMaxterm /@ {4,6};\npositionZeroLista = Map[Position[#, 0] &, risultati];\n\n\nGeneraTriade[iv_, keys_] := Module[{alpha0},\n   (* Matrice 3x3 per la chiave nulla *)\n   alpha0 = Mod[Total[S3xBox[#, {0, 0, 0}] & /@ iv], 2];\n\n   (*Calcolo per ciascuna chiave *)\n   Map[\n      Function[k, Mod[Total[S3xBox[#, k] & /@ iv] + alpha0, 2]], \n      keys\n   ]\n]\n\n(*Definizione delle chiavi unitarie per la triade*)\nkeysUnit = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};\n\n\n(*Lista elementi [S(v#,k1),S(v#,k2),S(v#,k3)] iterando i maxterm*)\nTriadiLista = Map[GeneraTriade[generatoreComb3[#], keysUnit] &, maxterms];\n\n\n\n(* Applicazione con MapThread su tutte le triadi e le relative liste di indici *)\nmatriceCoeffLista = MapThread[\n   Function[{triade, indici},\n      (* triade[[1]] è m1, triade[[2]] è m2, triade[[3]] è m3 *)\n      {triade[[1, #1, #2]], triade[[2, #1, #2]], triade[[3, #1, #2]]} & @@@ indici\n   ],\n   {TriadiLista, positionZeroLista}\n];\n\n\nCUBEONLINE[iv_List,key_List]:=  Mod[Total[Map[S3xBox [#, key] &, iv ]]+Total[Map[S3xBox [#, {0,0,0}] &, iv ]],2]\n(* Genera una lista di matrici 3x3 dei termini noti, una per ogni maxterm *)\nterminiNotiLista = Map[\n   CUBEONLINE[generatoreComb3[#], k] &, \n   maxterms\n];\n\n(* Estrazione parallela degli elementi specificati dalle coordinate di ciascuna matrice *)\nterminiNotiLista = MapThread[\n   Function[{matriceTN, indici},\n      matriceTN[[#1, #2]] & @@@ indici\n   ],\n   {terminiNotiLista, positionZeroLista}\n];\n\n\n\nPrint[\"SISTEMA FINALE\"]\nMC=Flatten[matriceCoeffLista,1];\nTN=Flatten[terminiNotiLista,1];\nPrint[TableForm[MC] ,\" x \",TableForm[{k1,k2,k3}],\" = \",TableForm[TN]]\nPrint[\"Bit della chiave: \", LinearSolve[MC,TN]]\n",
+   "value": "ClearAll[\"Global`*\"]\n(* S3X-box*)\nivs = {v1, v2, v3, v4, v5, v6};\nks = {k1, k2, k3};\niv = {1, 1, 1, 1, 1, 1};\nk = {0, 1, 1};\n(* Funzione SBox*)\nshiftRows[s_List] := s[[ {2, 3, 1} ]]\nshiftColumns[s_List] := Transpose[s]\nsubstitution[s_List] := PolynomialMod[\n      Partition[{\n            s[[1]][[1]] *s[[2]][[2]]*s[[1]][[2]]+ s[[1]][[2]], \n            s[[1]][[2]]*s[[2]][[1]] + s[[1]][[2]]*s[[1]][[1]], \n            s[[2]][[1]]*s[[1]][[3]], \n            s[[1]][[1]]*s[[2]][[2]]*s[[1]][[2]],\n          s[[1]][[1]] + s[[1]][[2]]*s[[3]][[3]], \n            s[[1]][[2]]*s[[2]][[1]] + s[[1]][[2]], \n            s[[3]][[1]]*s[[1]][[1]] + s[[1]][[2]]*s[[2]][[1]], \n            s[[1]][[1]]*s[[2]][[2]] + s[[3]][[1]]*s[[3]][[2]] + \n          s[[2]][[1]]*s[[2]][[3]] + s[[2]][[3]],\n          s[[3]][[2]] + s[[1]][[3]]*s[[2]][[2]]\n          }, 3], \n      2\n    ]\n \n(*substitution2[s_List]:=Module[{a,b,c,d,e,f,g,h,i}, {{a,b,c}, {d,e,f},{g,h,i}}=s;\nMod[{{a b,},{},{}},2]\n]\n*)\n(*Crea una matrice 3x3 combiando IV e K*)\nStruct[iv_, k_] := Append[Partition[iv, 3], k];\n(*Defisce la S-Box*)\nS3xBox[iv_, k_] := substitution[shiftColumns[shiftRows[Struct[iv, k]]]];\n\n(*VARIABILI PER generatoreComb3*)\n\n        \n(*GENERA GLI IV*)\ngeneratoreComb3[maxterm_List] := Module[{d, zv},\n  d = Length[maxterm];\n  zv = Table[0, 6];\n  \n  Map[\n    Module[{ztmp = zv},\n      ztmp[[maxterm]] = IntegerDigits[#, 2, d];\n      ztmp\n    ] &, \n    Range[0, 2^d - 1]\n  ]\n]\n\n\n\nMatrixOr[a_List,b_List] := Mod[a+b + a*b,2]\n\nTestLinearita2[key1_List,key2_List,iv_List]:=\nMod[\nTotal[Map[S3xBox [#, key1] &, iv ]]+\nTotal[Map[S3xBox [#, key2] &, iv ]]+\nTotal[Map[S3xBox [#, ConstantArray[0,Length[key1]]] &, iv ]] +  (*alpha zero*)\nTotal[Map[S3xBox[#, key1 + key2] &, iv]]       (*elelmento di ugualianza*)\n,2]\n\n(*cubeoffline-> se BLR ha successo, si fanno xor variazioni del maxterm con k1 (m1), poi k2 (m2), poi k3(m3)*)\n(*per matrice dei coefficienti -> [m1[0][0], m2[0][0], m3[0][0]], [m1[0][1]....], , escludendo elementi 0,0,0*)\n\nPrint[\"STAMPA simbolico\"]\nS3xBox[ivs,ks] //MatrixForm\n\n\n(*Prodotto cartesiano chiavi random*)\nKeyPairAll = Permutations[Rest @ Tuples[{0, 1}, #1], {#2}] &;\n\n\n(*Restituisce una matrice di zero ed uno rispetto a BLR (iterato)*)\nCalcolaLineaMaxterm[mt_] := Fold[\n   MatrixOr, \n   TestLinearita2[#1, #2, generatoreComb3[{mt}]] & @@@ KeyPairAll[3, 2]\n];\n\n(* CI SERVIRA' PER AUTOMATIZZARE IL TUTTO*)\nmaxterms={{4},{6}};\n\n(* Applica a tutta la lista di maxterm *)\nrisultati = CalcolaLineaMaxterm /@ {4,6};\npositionZeroLista = Map[Position[#, 0] &, risultati];\n\n\nGeneraTriade[iv_, keys_] := Module[{alpha0},\n   (* Matrice 3x3 per la chiave nulla *)\n   alpha0 = Mod[Total[S3xBox[#, {0, 0, 0}] & /@ iv], 2];\n\n   (*Calcolo per ciascuna chiave *)\n   Map[\n      Function[k, Mod[Total[S3xBox[#, k] & /@ iv] + alpha0, 2]], \n      keys\n   ]\n]\n\n(*Definizione delle chiavi unitarie per la triade*)\nkeysUnit = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};\n\n\n(*Lista elementi [S(v#,k1),S(v#,k2),S(v#,k3)] iterando i maxterm*)\nTriadiLista = Map[GeneraTriade[generatoreComb3[#], keysUnit] &, maxterms];\n\n\n\n(* Applicazione con MapThread su tutte le triadi e le relative liste di indici *)\nmatriceCoeffLista = MapThread[\n   Function[{triade, indici},\n      (* triade[[1]] è m1, triade[[2]] è m2, triade[[3]] è m3 *)\n      {triade[[1, #1, #2]], triade[[2, #1, #2]], triade[[3, #1, #2]]} & @@@ indici\n   ],\n   {TriadiLista, positionZeroLista}\n];\n\n\nCUBEONLINE[iv_List,key_List]:=  Mod[Total[Map[S3xBox [#, key] &, iv ]]+Total[Map[S3xBox [#, {0,0,0}] &, iv ]],2]\n(* Genera una lista di matrici 3x3 dei termini noti, una per ogni maxterm *)\nterminiNotiLista = Map[\n   CUBEONLINE[generatoreComb3[#], k] &, \n   maxterms\n];\n\n(* Estrazione parallela degli elementi specificati dalle coordinate di ciascuna matrice *)\nterminiNotiLista = MapThread[\n   Function[{matriceTN, indici},\n      matriceTN[[#1, #2]] & @@@ indici\n   ],\n   {terminiNotiLista, positionZeroLista}\n];\n\n\n\nPrint[\"SISTEMA FINALE\"]\nMC=Flatten[matriceCoeffLista,1];\nTN=Flatten[terminiNotiLista,1];\nPrint[MatrixForm[MC] ,\" x \",MatrixForm[{k1,k2,k3}],\" = \",MatrixForm[TN]]\nPrint[\"Bit della chiave: \", LinearSolve[MC,TN]]\n",
    "languageId": "wolfram",
    "outputs": [
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">SetDelayed::write</span>: Tag In in In[275] is Protected.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "SetDelayed::write: Tag In in In[275] is Protected.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "198d273e-a52a-40b5-9aa0-4cb0e4dbbcaf",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><w>$Failed</w></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "$Failed",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "da063d1d-7bf3-4b6a-8cd4-3533a27e04a8",
-     "metadata": {
-      "cellLabel": "Out[33]= ",
-      "isBoxData": false
-     }
-    },
     {
      "items": [
       {
@@ -50,7 +16,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "fd523a51-2776-41cb-9d20-ade7743c5bc1",
+     "id": "02c0ba3c-308f-4c24-b157-259dfa795cc5",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -59,17 +25,17 @@
     {
      "items": [
       {
-       "data": "<div class=\"wexpr\"><wgrid style=\"grid-template-columns:repeat(3,max-content);\"><w><wrow><w></w><w>k1</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k2</w><w></w><w>v4</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>k1</w><w></w><w>v4</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>v5</w></wrow></wrow></w><w><wrow><w></w><w>v1</w><w></w><w>v5</w></wrow></w><w><wrow><w></w><w>k1</w><w></w><w>k2</w><w></w><w>v4</w></wrow></w><w><wrow><w></w><wrow><w></w><w>k1</w><w></w><w>v3</w></wrow><w>+</w><w>v4</w></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>v5</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>k1</w><w></w><w>v5</w></wrow><w>+</w><wrow><w></w><w>v4</w><w></w><w>v6</w></wrow></wrow></w><w><wrow><w></w><w>v2</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>v4</w></wrow><w>+</w><wrow><w></w><w>v2</w><w></w><w>v5</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>v6</w></wrow></wrow></w><w><wrow><w></w><w>k3</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>v1</w></wrow></wrow></w></wgrid></div>",
+       "data": "<div class=\"wexpr\"><wrow><w></w><wb>(</wb><w>⁠</w><wgrid style=\"grid-template-columns:repeat(3,max-content);\"><w><wrow><w></w><w>k1</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k2</w><w></w><w>v4</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>k1</w><w></w><w>v4</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>v5</w></wrow></wrow></w><w><wrow><w></w><w>v1</w><w></w><w>v5</w></wrow></w><w><wrow><w></w><w>k1</w><w></w><w>k2</w><w></w><w>v4</w></wrow></w><w><wrow><w></w><wrow><w></w><w>k1</w><w></w><w>v3</w></wrow><w>+</w><w>v4</w></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>v5</w></wrow></wrow></w><w><wrow><w></w><wrow><w></w><w>k1</w><w></w><w>v5</w></wrow><w>+</w><wrow><w></w><w>v4</w><w></w><w>v6</w></wrow></wrow></w><w><wrow><w></w><w>v2</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>v4</w></wrow><w>+</w><wrow><w></w><w>v2</w><w></w><w>v5</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>v6</w></wrow></wrow></w><w><wrow><w></w><w>k3</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>v1</w></wrow></wrow></w></wgrid><w>⁠</w><wb>)</wb></wrow></div>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "TableForm[{{k1 + k1*k2*v4, k1*v4 + k1*v5, v1*v5}, {k1*k2*v4, k1*v3 + v4, k1 + k1*v5}, {k1*v5 + v4*v6, v2 + k2*v4 + v2*v5 + k3*v6, k3 + k2*v1}}]",
+       "data": "MatrixForm[{{k1 + k1*k2*v4, k1*v4 + k1*v5, v1*v5}, {k1*k2*v4, k1*v3 + v4, k1 + k1*v5}, {k1*v5 + v4*v6, v2 + k2*v4 + v2*v5 + k3*v6, k3 + k2*v1}}]",
        "mime": "text/plain"
       }
      ],
-     "id": "35b26447-eeaf-436a-85d1-4556fe18316c",
+     "id": "88719b48-9580-4ca7-9c40-c53ab9c16762",
      "metadata": {
-      "cellLabel": "Out[47]//TableForm= ",
+      "cellLabel": "Out[1233]//MatrixForm= ",
       "isBoxData": false
      }
     },
@@ -84,7 +50,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "4d722339-337a-4aa8-adf0-a8859d1920a7",
+     "id": "25e545a3-c735-4b67-ba29-da4f85868e68",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -93,15 +59,15 @@
     {
      "items": [
       {
-       "data": "<pre>1   0   0 x k1 = 0\n\n0   0   0   k2   0\n\n0   0   0   k3   0\n\n0   0   0        0\n\n0   0   0        0\n\n0   1   0        1\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   1        0\n\n0   0   0        0\n</pre>",
+       "data": "<pre>1   0   0 x k1 = 0\n\n0   0   0   k2   0\n\n0   0   0   k3   0\n\n0   0   0        0\n\n0   0   0        0\n\n0   1   0        1\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   0        0\n\n0   0   1        1\n\n0   0   0        0\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"1   0   0 x k1 = 0\\n\\n0   0   0   k2   0\\n\\n0   0   0   k3   0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   1   0        1\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   1        0\\n\\n0   0   0        0\\n\"",
+       "data": "\"1   0   0 x k1 = 0\\n\\n0   0   0   k2   0\\n\\n0   0   0   k3   0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   1   0        1\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   0        0\\n\\n0   0   1        1\\n\\n0   0   0        0\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "fb2c4dce-5a6c-4d0f-8510-429f0d3f8d5b",
+     "id": "676af11a-71a0-429c-824b-ac8e035fbeae",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -110,15 +76,15 @@
     {
      "items": [
       {
-       "data": "<pre>Bit della chiave: {0, 1, 0}\n</pre>",
+       "data": "<pre>Bit della chiave: {0, 1, 1}\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"Bit della chiave: {0, 1, 0}\\n\"",
+       "data": "\"Bit della chiave: {0, 1, 1}\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "eef3aeee-0ade-4d74-ba01-31b618b0fa76",
+     "id": "48b869d5-944e-437b-ae72-a5b615a23cb3",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -128,10 +94,10 @@
    "metadata": {},
    "executionSummary": {
     "timing": {
-     "startTime": 1785450769213,
-     "endTime": 1785450771504
+     "startTime": 1785495990933,
+     "endTime": 1785495993128
     },
-    "executionOrder": 33,
+    "executionOrder": 1219,
     "success": true
    }
   },
