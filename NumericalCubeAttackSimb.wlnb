@@ -2,15 +2,22 @@
  "cells": [
   {
    "kind": 2,
-   "value": "(* Definizione dell'Input per ottenere 5 parole da 8 bit ciascuna *)\niv = IntegerDigits[FromDigits[\"BA\", 16], 2, 8];       (* 8 bit  -> x0 *)\nkey = IntegerDigits[FromDigits[\"AAAA\", 16], 2, 16];    (* 16 bit -> x1, x2 *)\nnonce = IntegerDigits[FromDigits[\"FFFF\", 16], 2, 16];  (* 16 bit -> x3, x4 *)\nivs={v1,v2,v3,v4,v5,v6,v7,v8};\nkeys={k1,k2,k3,k4,k5,k6,k7,k8,k9,k10,k11,k12,k13,k14,k15,k16};\nnonces={n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16};\n\n(* Matrice 5x8: Join produce 40 bit, Partition crea 5 liste da 8 bit *)\nStruct[key_,nonce_]:= Partition[Join[iv, key, nonce], 8]\n;\n(* Costanti di Round a 8 bit per i 12 round *)\nroundConstants = IntegerDigits[#, 2, 8] & /@ {\n   16^^F0, 16^^E1, 16^^D2, 16^^C3, 16^^B4, 16^^A5, \n   16^^96, 16^^87, 16^^78, 16^^69, 16^^5A, 16^^4B\n};\n\n(* Layer 1: Addition of Round Constant *)\naddRoundConstant[stato_List, n_Integer] := ReplacePart[stato, 3 -> PolynomialMod[stato[[3]] + roundConstants[[n]], 2]];\n\n(* Layer 2: Substitution Layer (S-box 5-bit verticalmente su 8 colonne) *)\nsubstitutionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},\n  {x1, x2, x3, x4, x5} = stato;\n  \n  (* Trasponiamo per trattare ogni colonna di 5 bit *)\n  trasposta = Transpose[{x1, x2, x3, x4, x5}];\n  \n  nuovaTrasposta = Map[Function[col,\n     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]]},\n      {\n        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],\n        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],\n        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],\n        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],\n        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]\n      }\n     ]\n    ], trasposta];\n    \n  Transpose[nuovaTrasposta]\n];\n\n(* Layer 3: Linear Diffusion Layer (Rotazioni su parole da 8 bit) *)\nlinearDiffusionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5},\n  {x1, x2, x3, x4, x5} = stato;\n  x1 = PolynomialMod[x1 + RotateRight[x1, 3], 2];\n  x2 = PolynomialMod[x2 + RotateRight[x2, 1] + RotateRight[x2, 3], 2];\n  x3 = PolynomialMod[x3 + RotateRight[x3, 1] + RotateRight[x3, 2], 2];\n  x4 = PolynomialMod[x4 + RotateRight[x4, 2] + RotateRight[x4, 1], 2];\n  x5 = PolynomialMod[x5 + RotateRight[x5, 3] + RotateRight[x5, 1], 2];\n  {x1, x2, x3, x4, x5}\n];\n\n(* Permutazione del singolo Round n *)\nAsconRound[state_List, nRound_Integer]:=linearDiffusionLayer[substitutionLayer[addRoundConstant[state, nRound]]];\n\n(* --- 3. ESECUZIONE DELL'INTERA PERMUTAZIONE A 12 ROUND --- *)\nAscon129f[key_,nonce_, rounds_]:=Fold[AsconRound[#1, #2] &, Struct[key,nonce], Range[rounds]];\n\n(* Versione da usare dentro i test ... *)\nAsconNRound[key_,nonce_]:=Ascon129f [key, nonce,1];\n",
+   "value": "(* Definizione dell'Input per ottenere 5 parole da 8 bit ciascuna *)\niv = IntegerDigits[FromDigits[\"BA\", 16], 2, 8];       (* 8 bit  -> x0 *)\nkey = IntegerDigits[FromDigits[\"AAAA\", 16], 2, 16];    (* 16 bit -> x1, x2 *)\nnonce = IntegerDigits[FromDigits[\"FFFF\", 16], 2, 16];  (* 16 bit -> x3, x4 *)\nivs={v1,v2,v3,v4,v5,v6,v7,v8};\nkeys={k1,k2,k3,k4,k5,k6,k7,k8,k9,k10,k11,k12,k13,k14,k15,k16};\nnonces={n1,n2,n3,n4,n5,n6,n7,n8,n9,n10,n11,n12,n13,n14,n15,n16};\n\n(* Matrice 5x8: Join produce 40 bit, Partition crea 5 liste da 8 bit *)\nStruct[key_,nonce_]:= Partition[Join[iv, key, nonce], 8]\n\n(* Costanti di Round a 8 bit per i 12 round *)\nroundConstants = IntegerDigits[#, 2, 8] & /@ {\n   16^^F0, 16^^E1, 16^^D2, 16^^C3, 16^^B4, 16^^A5, \n   16^^96, 16^^87, 16^^78, 16^^69, 16^^5A, 16^^4B\n};\n\n(* Layer 1: Addition of Round Constant *)\naddRoundConstant[stato_List, n_Integer] := ReplacePart[stato, 3 -> PolynomialMod[stato[[3]] + roundConstants[[n]], 2]];\n\n(* Layer 2: Substitution Layer (S-box 5-bit verticalmente su 8 colonne) *)\nsubstitutionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},\n  {x1, x2, x3, x4, x5} = stato;\n  \n  (* Trasponiamo per trattare ogni colonna di 5 bit *)\n  trasposta = Transpose[{x1, x2, x3, x4, x5}];\n  \n  nuovaTrasposta = Map[Function[col,\n     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]]},\n      {\n        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],\n        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],\n        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],\n        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],\n        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]\n      }\n     ]\n    ], trasposta];\n    \n  Transpose[nuovaTrasposta]\n];\n\n(* Layer 3: Linear Diffusion Layer (Rotazioni su parole da 8 bit) *)\nlinearDiffusionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5},\n  {x1, x2, x3, x4, x5} = stato;\n  x1 = PolynomialMod[x1 + RotateRight[x1, 3], 2];\n  x2 = PolynomialMod[x2 + RotateRight[x2, 1] + RotateRight[x2, 3], 2];\n  x3 = PolynomialMod[x3 + RotateRight[x3, 1] + RotateRight[x3, 2], 2];\n  x4 = PolynomialMod[x4 + RotateRight[x4, 2] + RotateRight[x4, 1], 2];\n  x5 = PolynomialMod[x5 + RotateRight[x5, 3] + RotateRight[x5, 1], 2];\n  {x1, x2, x3, x4, x5}\n];\n\n(* Permutazione del singolo Round n *)\nAsconRound[state_List, nRound_Integer]:=linearDiffusionLayer[substitutionLayer[addRoundConstant[state, nRound]]];\n\n(* --- 3. ESECUZIONE DELL'INTERA PERMUTAZIONE A 12 ROUND --- *)\nAscon129f[key_,nonce_, rounds_]:=Fold[AsconRound[#1, #2] &, Struct[key,nonce], Range[rounds]];\n\n(* Versione da usare dentro i test ... *)\nAsconNRound[key_,nonce_]:=Ascon129f [key, nonce,1];\n",
    "languageId": "wolfram",
    "outputs": [],
    "metadata": {},
-   "executionSummary": {}
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785496428860,
+     "endTime": 1785496429838
+    },
+    "executionOrder": 1,
+    "success": true
+   }
   },
   {
    "kind": 2,
-   "value": "Print[\"Stato numerico dopo 1 Round:\"];\nAscon129f[key,nonce,1] // MatrixForm\nPrint[\"Stato simbolico dopo 1 Round, andando avanti con i round successivi, si nota subito un fenomeno tipico dell'analisi simbolica della S-box e delle permutazioni in Ascon: il polinomio esplode (ossia si verifica un'esplosione algebrica del polinomio)\"];\nAscon129f[keys,nonces,1] // MatrixForm\n",
+   "value": "Print[\"Stato numerico dopo 1 Round:\"];\nAscon129f[key,nonce,1] // MatrixForm\nPrint[\"Stato simbolico dopo 1 Round, andando avanti con i round successivi, si nota subito un fenomeno tipico dell'analisi simbolica della S-box e delle permutazioni in Ascon: il polinomio esplode (ossia si verifica un'esplosione algebrica del polinomio)\"];\nAscon129f[keys,nonces,1] // MatrixForm",
    "languageId": "wolfram",
    "outputs": [
     {
@@ -24,7 +31,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "d76ad2c2-ebd6-4f61-98e9-88a44911fcff",
+     "id": "5508c34c-6f12-404c-8ea9-349e84eb6639",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -41,9 +48,9 @@
        "mime": "text/plain"
       }
      ],
-     "id": "85eba773-5c6f-489b-9bc4-c7eaea192eb8",
+     "id": "f68b63e8-0773-4158-86a3-221c5d5799e0",
      "metadata": {
-      "cellLabel": "Out[51]//MatrixForm= ",
+      "cellLabel": "Out[16]//MatrixForm= ",
       "isBoxData": false
      }
     },
@@ -58,7 +65,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "6fcf7b57-2676-457d-b08f-4fb6a8b3376e",
+     "id": "faf4bc38-8f91-4bdd-a8dd-072fee4ae2bc",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -75,15 +82,22 @@
        "mime": "text/plain"
       }
      ],
-     "id": "f70234be-7a0a-44f4-85e0-b962340c5b67",
+     "id": "c29b8c05-027e-4738-99dc-a358e3d74aa0",
      "metadata": {
-      "cellLabel": "Out[53]//MatrixForm= ",
+      "cellLabel": "Out[18]//MatrixForm= ",
       "isBoxData": false
      }
     }
    ],
    "metadata": {},
-   "executionSummary": {}
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785496434707,
+     "endTime": 1785496435223
+    },
+    "executionOrder": 15,
+    "success": true
+   }
   },
   {
    "kind": 2,
@@ -101,7 +115,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "dfcea85d-cc89-4a65-aca3-5bc2354e5d8e",
+     "id": "9605bf55-c0e8-4971-96d7-e99e2dee4012",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -118,7 +132,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "317c7661-fe0d-46dd-9cb0-7aa34b4a9512",
+     "id": "dc24876c-b535-4dc7-8787-a1788357e92b",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -135,7 +149,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "0be81a88-9844-4baa-9acb-ee9f8a22d9e1",
+     "id": "8c4fb0a5-00d5-4dae-8110-874b41b675ed",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -145,239 +159,18 @@
    "metadata": {},
    "executionSummary": {
     "timing": {
-     "startTime": 1785487622707,
-     "endTime": 1785487623622
+     "startTime": 1785496438167,
+     "endTime": 1785496439083
     },
-    "executionOrder": 385,
+    "executionOrder": 19,
     "success": true
    }
   },
   {
    "kind": 2,
-   "value": "(*ATTACCO*)\n        \n(*GENERA GLI IV*)\nGenCombNonce[maxterm_List] := Module[{d, zv},\n  d = Length[maxterm];\n  zv = Table[0, Length[nonce]];\n  \n  Map[\n    Module[{ztmp = zv},\n      ztmp[[maxterm]] = IntegerDigits[#, 2, d];\n      ztmp\n    ] &, \n    Range[0, 2^d - 1]\n  ]\n]\n\n(* Operotore \"Somma\" dei test *)\nMatrixOr[a_List,b_List] := Mod[a+b + a*b,2]\n\n(* Test di linearità per BLR *)\nLinearityTest[key1_List,key2_List,nonce_List]:=\nMod[\nTotal[Map[AsconNRound [key1,#] &, nonce ]]+\nTotal[Map[AsconNRound [key2,#]  &, nonce ]]+\nTotal[Map[AsconNRound [ ConstantArray[0,Length[key]], #] &, nonce ]] +  (*alpha zero*)\nTotal[Map[ AsconNRound[ key1 + key2,#] &, nonce]]       (*elelmento di ugualianza*)\n,2]\n\n\n(* Prodotto cartesiano chiavi random *)\nKeyPairAll = Permutations[Rest @ Tuples[{0, 1}, #1], {#2}] &;\n\nRandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1}, keyBits], RandomInteger[{0, 1}, keyBits]}, {numPairs} ];\n\n\n(* Deve dare esito positivo il 90% dei casi date due chiavi random, Manuel Blum, Michael Luby e Ronitt Rubinfeld *)\nBLR[mt_] := Fold[\n   MatrixOr, \n   LinearityTest[#1, #2, GenCombNonce[mt]] & @@@RandomKeyPairs[16,100]\n];\n\nPrint[\"AA\"]\n(* CI SERVIRA' PER AUTOMATIZZARE IL TUTTO*)\nmaxterms={{1},{2},{3},{4},{5},{6},{7}, {8},{9},{10}, {11}, {12},{13},{14},{15},{16}};\nmaxterms={{9},{14}};\n\n(* Applica a tutta la lista di maxterm *)\nrisultati = BLR /@ maxterms;\npositionZeroLista = Map[Position[#, 0] &, risultati]\n\n\n(**)\nGeneraTriade[keys_,nonce_] := Module[{alpha0},\n   (* Matrice 3x3 per la chiave nulla *)\n   alpha0 = Mod[Total[AsconNRound[ConstantArray[0,Length[key]],#] & /@ nonce], 2];\n\n   (*Calcolo per ciascuna chiave *)\n   Map[\n      Function[k, Mod[Total[AsconNRound[k,#] & /@ nonce] + alpha0, 2]], \n      keys\n   ]\n]\n\n\n(*Definizione delle chiavi unitarie per la triade*)\nkeysUnit = IdentityMatrix[16]\n\n\n(*Lista elementi [S(v#,k1),S(v#,k2),S(v#,k3)] iterando i maxterm*)\nTriadiLista = Map[keysUnit, GeneraTriade[GenCombNonce[#]] &, maxterms];\n\n\n(* Applicazione con MapThread su tutte le triadi e le relative liste di indici *)\nmatriceCoeffLista = MapThread[\n   Function[{triade, indici},\n      (* triade[[1]] è m1, triade[[2]] è m2, triade[[3]] è m3 *)\n      {triade[[1, #1, #2]], triade[[2, #1, #2]], triade[[3, #1, #2]]} & @@@ indici\n   ],\n   {TriadiLista, positionZeroLista}\n];\n\n\nCUBEONLINE[key_List,nonce_List]:=  Mod[Total[Map[AsconNRound [ key,#] &, nonce ]]+Total[Map[S3xBox [#, {0,0,0}] &, nonce ]],2]\n(* Genera una lista di matrici 3x3 dei termini noti, una per ogni maxterm *)\nterminiNotiLista = Map[\n   CUBEONLINE[generatoreComb3[#], k] &, \n   maxterms\n];\n\n(* Estrazione parallela degli elementi specificati dalle coordinate di ciascuna matrice *)\nterminiNotiLista = MapThread[\n   Function[{matriceTN, indici},\n      matriceTN[[#1, #2]] & @@@ indici\n   ],\n   {terminiNotiLista, positionZeroLista}\n];\n\n\n\nPrint[\"SISTEMA FINALE\"]\nMC=Flatten[matriceCoeffLista,1];\nTN=Flatten[terminiNotiLista,1];\nPrint[TableForm[MC] ,\" x \",TableForm[{k1,k2,k3}],\" = \",TableForm[TN]]\nPrint[\"Bit della chiave: \", LinearSolve[MC,TN]]\n\n\n\n\n\n\n\n\n",
+   "value": "(*ATTACCO*)\n        \n(*GENERA GLI IV*)\nGenCombNonce[maxterm_List] := Module[{d, zv},\n  d = Length[maxterm];\n  zv = Table[0, Length[nonce]];\n  \n  Map[\n    Module[{ztmp = zv},\n      ztmp[[maxterm]] = IntegerDigits[#, 2, d];\n      ztmp\n    ] &, \n    Range[0, 2^d - 1]\n  ]\n]\n\n(* Operotore \"Somma\" dei test *)\nMatrixOr[a_List,b_List] := Mod[a+b + a*b,2]\n\n(* Test di linearità per BLR *)\nLinearityTest[key1_List,key2_List,nonce_List]:=\nMod[\nTotal[Map[AsconNRound [key1,#] &, nonce ]]+\nTotal[Map[AsconNRound [key2,#]  &, nonce ]]+\nTotal[Map[AsconNRound [ ConstantArray[0,Length[key]], #] &, nonce ]] +  (*alpha zero*)\nTotal[Map[ AsconNRound[ key1 + key2,#] &, nonce]]       (*elelmento di ugualianza*)\n,2]\n\n\n(* Prodotto cartesiano chiavi random *)\nKeyPairAll = Permutations[Rest @ Tuples[{0, 1}, #1], {#2}] &;\n\nRandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1}, keyBits], RandomInteger[{0, 1}, keyBits]}, {numPairs} ];\n\n\n(* Deve dare esito positivo il 90% dei casi date due chiavi random, Manuel Blum, Michael Luby e Ronitt Rubinfeld *)\nBLR[mt_] := Fold[\n   MatrixOr, \n   LinearityTest[#1, #2, GenCombNonce[mt]] & @@@RandomKeyPairs[16,100]\n];\n\n(* CI SERVIRA' PER AUTOMATIZZARE IL TUTTO*)\nmaxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};\n\n(* Applica a tutta la lista di maxterm *)\nrisultati = BLR /@ maxterms;\npositionZeroLista = Map[Position[#, 0] &, risultati];\n\n\n(**)\nGeneraTriade[keys_,nonce_] := Module[{alpha0},\n   (* Matrice 3x3 per la chiave nulla *)\n   alpha0 = Mod[Total[AsconNRound[ConstantArray[0,Length[key]],#] & /@ nonce], 2];\n\n   (*Calcolo per ciascuna chiave *)\n   Map[\n      Function[k, Mod[Total[AsconNRound[k,#] & /@ nonce] + alpha0, 2]], \n      keys\n   ]\n]\n\n\n\n\n(*Definizione delle chiavi unitarie per la triade*)\nkeysUnit = IdentityMatrix[16];\n\n\n(*Lista elementi [S(v#,k1),S(v#,k2),S(v#,k3)] iterando i maxterm*)\n(*TriadiLista = Map[keysUnit, GeneraTriade[GenCombNonce[#]] &, maxterms]; *)\nTriadiLista = GeneraTriade[keysUnit, GenCombNonce[#]] & /@ maxterms;\n\n(* Applicazione con MapThread su tutte le triadi e le relative liste di indici *)\nmatriceCoeffLista = MapThread[\n   Function[{triade, indici},\n      (* triade[[1]] è m1, triade[[2]] è m2, triade[[3]] è m3 *)\n      (*{triade[[1, #1, #2]], triade[[2, #1, #2]], triade[[3, #1, #2]]} & @@@ indici*)\n      Table[triade[[i, #1, #2]], {i, 1, 16}] & @@@ indici\n   ],\n   {TriadiLista, positionZeroLista}\n];\n\n\nCUBEONLINE[key_List, nonce_List] := Mod[Total[Map[AsconNRound[key, #] &, nonce]]+Total[Map[AsconNRound[ConstantArray[0,Length[key]], #] &, nonce ]],2]\n\n(* Genera una lista di matrici 3x3 dei termini noti, una per ogni maxterm *)\nterminiNotiLista = Map[\n   CUBEONLINE[key, GenCombNonce[#]] &, \n   maxterms\n];\n\n(* Estrazione parallela degli elementi specificati dalle coordinate di ciascuna matrice *)\nterminiNotiLista = MapThread[\n   Function[{matriceTN, indici},\n      matriceTN[[#1, #2]] & @@@ indici\n   ],\n   {terminiNotiLista, positionZeroLista}\n];\n\n\n\nPrint[\"SISTEMA FINALE\"]\nMC=Flatten[matriceCoeffLista,1];\nTN=Flatten[terminiNotiLista,1];\n(*Print[MatrixForm[MC] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TN]]*)\n\nPrint[\"Bit della chiave:         \", key]\nPrint[\"Bit della chiave trovata: \", LinearSolve[MC,TN, Modulus->2]]\n\n\n\n\n",
    "languageId": "wolfram",
    "outputs": [
-    {
-     "items": [
-      {
-       "data": "<pre>AA\n</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"AA\\n\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "5f1d497d-4491-4702-9df6-9819598f8371",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><wrow><w></w><wb>{</wb><wrow><w></w><wrow><w></w><wb>{</wb><wrow><w></w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>2</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>3</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>4</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>2</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>3</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>4</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>5</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>6</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>7</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>5</w><w>,</w><w>8</w></wrow><wb>}</wb></wrow></wrow><wb>}</wb></wrow></wrow><wb>}</wb></wrow></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "{{{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}, {{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}}",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "92a68c59-4928-4053-adce-b2265150e064",
-     "metadata": {
-      "cellLabel": "Out[53]= ",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><wrow><w></w><wb>{</wb><wrow><w></w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow></wrow><wb>}</wb></wrow></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "b657bfe3-9056-4d0e-8090-175f0b1b1c81",
-     "metadata": {
-      "cellLabel": "Out[55]= ",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Map::level</span>: Level specification {{9}, {14}}\n     is not of the form n, {n} or {m, n}.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Map::level: Level specification {{9}, {14}}\n     is not of the form n, {n} or {m, n}.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "c0acbe08-5c3c-48cf-bc70-e09e800cea72",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">MapThread::mptd</span>: \n   Object Map[{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n      {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, &lt;&lt;15&gt;&gt;}, &lt;&lt;12&gt;&gt;, \n      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}, &lt;&lt;2&gt;&gt;] at position\n     {2, 1} in MapThread[Function[{triade, indici}, \n      ({triade[[1,#1,#2]], triade[[2,#1,#2]], triade[[3,#1,#2]]} &amp; ) @@@ \n       indici], {Map[{{1, 0, 0, 0, 0, 0, &lt;&lt;7&gt;&gt;, 0, 0, 0}, &lt;&lt;15&gt;&gt;}, &lt;&lt;2&gt;&gt;], \n      {&lt;&lt;2&gt;&gt;}}] has only 0 of required 1 dimensions.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "MapThread::mptd: \n   Object Map[{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n      {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, <<15>>}, <<12>>, \n      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}, <<2>>] at position\n     {2, 1} in MapThread[Function[{triade, indici}, \n      ({triade[[1,#1,#2]], triade[[2,#1,#2]], triade[[3,#1,#2]]} & ) @@@ \n       indici], {Map[{{1, 0, 0, 0, 0, 0, <<7>>, 0, 0, 0}, <<15>>}, <<2>>], \n      {<<2>>}}] has only 0 of required 1 dimensions.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "f07b0e9c-48b3-4f7a-a110-67244bab416b",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Part::partw</span>: Part 2 of generatoreComb3[{9}] does not exist.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Part::partw: Part 2 of generatoreComb3[{9}] does not exist.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "fdce94b5-8b8a-4d5a-b8ae-412cb1154c7f",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Part::partw</span>: Part 3 of generatoreComb3[{9}] does not exist.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Part::partw: Part 3 of generatoreComb3[{9}] does not exist.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "5f6ff7c0-59e3-496c-a300-7aa824664fc2",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Part::partw</span>: Part 4 of generatoreComb3[{9}] does not exist.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Part::partw: Part 4 of generatoreComb3[{9}] does not exist.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "17ddd129-4d1d-4cbe-ab63-99a8016fdd27",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">General::stop</span>: Further output of Part::partw\n     will be suppressed during this calculation.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "General::stop: Further output of Part::partw\n     will be suppressed during this calculation.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "9cd142cb-2568-4aab-815d-90ff92f26a8a",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Part::partd</span>: Part specification CUBEONLINE[generatoreComb3[{9}], k][[2,1]]\n     is longer than depth of object.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Part::partd: Part specification CUBEONLINE[generatoreComb3[{9}], k][[2,1]]\n     is longer than depth of object.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "a29372df-704e-48ed-87c4-174bbd79e9f4",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Part::partd</span>: Part specification CUBEONLINE[generatoreComb3[{9}], k][[2,2]]\n     is longer than depth of object.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Part::partd: Part specification CUBEONLINE[generatoreComb3[{9}], k][[2,2]]\n     is longer than depth of object.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "a6e988b9-3223-4f2f-ac41-b3ce4eb92fc6",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">Part::partd</span>: Part specification CUBEONLINE[generatoreComb3[{9}], k][[2,3]]\n     is longer than depth of object.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "Part::partd: Part specification CUBEONLINE[generatoreComb3[{9}], k][[2,3]]\n     is longer than depth of object.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "13e6a8e3-8e89-48a4-9877-7fe8f7d4de48",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre><span class=\"wl-message\">General::stop</span>: Further output of Part::partd\n     will be suppressed during this calculation.</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "General::stop: Further output of Part::partd\n     will be suppressed during this calculation.",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "7840dab8-2854-4b0b-8c63-e17cf37cc1d4",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
     {
      "items": [
       {
@@ -389,7 +182,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "96e25223-b03b-415f-a0dd-8d3da1698918",
+     "id": "b65fcbad-b8bd-4db4-83e7-347fe7333241",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -398,15 +191,15 @@
     {
      "items": [
       {
-       "data": "<pre>MapThread[Function[{triade, indici},                                      x k1\n \n&gt;    ({triade[[1,#1,#2]], triade[[2,#1,#2]], triade[[3,#1,#2]]} &amp; ) @@@     k2\n \n&gt;     indici], {Map[{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},      k3\n \n&gt;      {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0}, \n \n&gt;      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}, \n \n&gt;     GeneraTriade[GenCombNonce[#1]] &amp; , {{9}, {14}}], \n \n&gt;    {{{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \n \n&gt;      {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \n \n&gt;      {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \n \n&gt;      {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \n \n&gt;      {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}, \n \n&gt;     {{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \n \n&gt;      {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \n \n&gt;      {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \n \n&gt;      {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \n \n&gt;      {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}}}]\n \n&gt;    = 9\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,2]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,3]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,4]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,5]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,6]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,7]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[1,8]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,1]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,2]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,3]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,4]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,5]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,6]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,7]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[2,8]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,1]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,2]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,3]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,4]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,5]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,6]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,7]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[3,8]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,1]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,2]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,3]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,4]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,5]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,6]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,7]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[4,8]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,1]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,2]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,3]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,4]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,5]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,6]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,7]]\n\n       CUBEONLINE[generatoreComb3[{9}], k][[5,8]]\n\n       14\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,2]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,3]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,4]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,5]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,6]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,7]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[1,8]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,1]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,2]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,3]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,4]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,5]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,6]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,7]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[2,8]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,1]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,2]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,3]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,4]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,5]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,6]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,7]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[3,8]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,1]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,2]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,3]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,4]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,5]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,6]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,7]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[4,8]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,1]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,2]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,3]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,4]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,5]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,6]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,7]]\n\n       CUBEONLINE[generatoreComb3[{14}], k][[5,8]]\n</pre>",
+       "data": "<pre>Bit della chiave:         {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"MapThread[Function[{triade, indici},                                      x k1\\n \\n>    ({triade[[1,#1,#2]], triade[[2,#1,#2]], triade[[3,#1,#2]]} & ) @@@     k2\\n \\n>     indici], {Map[{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},      k3\\n \\n>      {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0}, \\n \\n>      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}, \\n \\n>     GeneraTriade[GenCombNonce[#1]] & , {{9}, {14}}], \\n \\n>    {{{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \\n \\n>      {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \\n \\n>      {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \\n \\n>      {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \\n \\n>      {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}, \\n \\n>     {{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \\n \\n>      {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \\n \\n>      {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \\n \\n>      {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \\n \\n>      {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}}}]\\n \\n>    = 9\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,2]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,3]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,4]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,5]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,6]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,7]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[1,8]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,1]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,2]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,3]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,4]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,5]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,6]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,7]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[2,8]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,1]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,2]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,3]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,4]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,5]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,6]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,7]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[3,8]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,1]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,2]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,3]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,4]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,5]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,6]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,7]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[4,8]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,1]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,2]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,3]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,4]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,5]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,6]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,7]]\\n\\n       CUBEONLINE[generatoreComb3[{9}], k][[5,8]]\\n\\n       14\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,2]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,3]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,4]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,5]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,6]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,7]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[1,8]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,1]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,2]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,3]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,4]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,5]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,6]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,7]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[2,8]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,1]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,2]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,3]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,4]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,5]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,6]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,7]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[3,8]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,1]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,2]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,3]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,4]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,5]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,6]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,7]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[4,8]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,1]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,2]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,3]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,4]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,5]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,6]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,7]]\\n\\n       CUBEONLINE[generatoreComb3[{14}], k][[5,8]]\\n\"",
+       "data": "\"Bit della chiave:         {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "03bf9133-50d3-4eb3-92e2-c3c92058bfb4",
+     "id": "2b0c6638-cfc4-4bad-b3df-b52bbec8e7ed",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -415,21 +208,36 @@
     {
      "items": [
       {
-       "data": "<pre>Bit della chiave: LinearSolve[MapThread[Function[{triade, indici}, \n \n&gt;      ({triade[[1,#1,#2]], triade[[2,#1,#2]], triade[[3,#1,#2]]} &amp; ) @@@ \n \n&gt;       indici], {Map[{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0}, \n \n&gt;        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}, \n \n&gt;       GeneraTriade[GenCombNonce[#1]] &amp; , {{9}, {14}}], \n \n&gt;      {{{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \n \n&gt;        {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \n \n&gt;        {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \n \n&gt;        {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \n \n&gt;        {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}, \n \n&gt;       {{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \n \n&gt;        {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \n \n&gt;        {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \n \n&gt;        {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \n \n&gt;        {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}}}], \n \n&gt;    {{9}, CUBEONLINE[generatoreComb3[{9}], k][[1,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[1,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[1,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[1,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[1,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[1,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[1,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[2,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[3,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[4,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{9}], k][[5,8]], {14}, \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[1,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[2,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[3,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[4,8]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,1]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,2]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,3]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,4]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,5]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,6]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,7]], \n \n&gt;     CUBEONLINE[generatoreComb3[{14}], k][[5,8]]}]\n</pre>",
+       "data": "<pre>Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"Bit della chiave: LinearSolve[MapThread[Function[{triade, indici}, \\n \\n>      ({triade[[1,#1,#2]], triade[[2,#1,#2]], triade[[3,#1,#2]]} & ) @@@ \\n \\n>       indici], {Map[{{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0}, \\n \\n>        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}}, \\n \\n>       GeneraTriade[GenCombNonce[#1]] & , {{9}, {14}}], \\n \\n>      {{{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \\n \\n>        {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \\n \\n>        {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \\n \\n>        {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \\n \\n>        {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}, \\n \\n>       {{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, \\n \\n>        {2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6}, {2, 7}, {2, 8}, \\n \\n>        {3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}, \\n \\n>        {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6}, {4, 7}, {4, 8}, \\n \\n>        {5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6}, {5, 7}, {5, 8}}}}], \\n \\n>    {{9}, CUBEONLINE[generatoreComb3[{9}], k][[1,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[1,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[1,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[1,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[1,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[1,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[1,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[2,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[3,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[4,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{9}], k][[5,8]], {14}, \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[1,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[2,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[3,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[4,8]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,1]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,2]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,3]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,4]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,5]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,6]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,7]], \\n \\n>     CUBEONLINE[generatoreComb3[{14}], k][[5,8]]}]\\n\"",
+       "data": "\"Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "926774bd-5b34-4a13-ac24-6c7fcf7e2e0e",
+     "id": "b59e9f5b-0553-48ed-90e7-ca401a15b1ce",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
      }
     }
    ],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785496847644,
+     "endTime": 1785496859903
+    },
+    "executionOrder": 327,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "RowReduce[{{0,0,1},{1,0,1},{1,1,1}}]\nRowReduce[{{0,0,1},{0,0,1},{1,1,1}}]\nRowReduce[{{0,0,1},{1,0,1},{1,1,1},{0,1,1},{0,0,0},{1,1,1}}]\n",
+   "languageId": "wolfram",
+   "outputs": [],
    "metadata": {},
    "executionSummary": {}
   }
