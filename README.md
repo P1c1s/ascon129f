@@ -37,13 +37,11 @@ Il primo strato effettua l'operazione di XOR tra la costante di round RCi​ e l
 ### Substitution Layer ($p_s$)
 Lo strato di sostituzione applica in parallelo 5 S-box su ogni colonna dello stato. Le funzioni booleane (ANF) che definiscono la S-box sono: 
 
-$
-X_1 \leftarrow X_2 \cdot X_5 \oplus X_4 \oplus X_2 \cdot X_3 \oplus X_3 \oplus X_1 \cdot X_2 \oplus X_2 \oplus X_1 \\
+$X_1 \leftarrow X_2 \cdot X_5 \oplus X_4 \oplus X_2 \cdot X_3 \oplus X_3 \oplus X_1 \cdot X_2 \oplus X_2 \oplus X_1 \\
 X_2 \leftarrow X_5 \oplus X_3 \cdot X_4 \oplus X_2 \cdot X_4 \oplus X_4 \oplus X_2 \cdot X_3 \oplus X_2 \oplus X_3 \oplus X_1 \\
 X_3 \leftarrow X_4 \cdot X_5 \oplus X_5 \oplus X_3 \oplus X_2 \oplus 1 \\
 X_4 \leftarrow X_1 \cdot X_5 \oplus X_5 \oplus X_1 \cdot X_4 \oplus X_4 \oplus X_3 \oplus X_2 \oplus X_1 \\
-X_5 \leftarrow X_2 \cdot X_5 \oplus X_5 \oplus X_4 \oplus X_1 \cdot X_2 \oplus X_1
-$
+X_5 \leftarrow X_2 \cdot X_5 \oplus X_5 \oplus X_4 \oplus X_1 \cdot X_2 \oplus X_1$
 
  ### Linear Diffusion Layer ($p_l$)
 Lo strato di diffusione garantisce la dipendenza tra i bit delle parole tramite rotazioni cicliche e XOR. In Ascon-129f, le funzioni lineari $\Sigma_i$​ sono scalate per operare su parole ridotte:
