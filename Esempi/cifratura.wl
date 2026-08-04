@@ -1,5 +1,5 @@
-Get["/home/lorenzo/Documenti/GitHubProjects/ascon129f/vars.wl"]
-Get["/home/lorenzo/Documenti/GitHubProjects/ascon129f/Ascon.wl"]
+Get["/home/lorenzo/Documenti/GitHubProjects/ascon129f/Esempi/vars.wl"]
+Get["/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/Ascon.wl"]
 
 plaintext = "Testo di prova";
 

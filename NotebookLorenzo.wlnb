@@ -2,16 +2,68 @@
  "cells": [
   {
    "kind": 2,
-   "value": "ClearAll[\"Global`*\"]\n\n(* Import delle funzioni che definiscono Ascon *)\nGet[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Ascon.wl\"]",
+   "value": "ClearAll[\"Global`*\"]\n\n(* Import della Libreria che implementa Ascon *)\nGet[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/Ascon.wl\"]",
    "languageId": "wolfram",
-   "outputs": [],
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><w>/home</w></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"/home\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "c265555f-2d12-4c3d-8174-3d305d7dda12",
+     "metadata": {
+      "cellLabel": "Out[78]= ",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><w>/home/lorenzo</w></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"/home/lorenzo\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "24218ba1-eb5a-44f8-8bc1-a012696c809d",
+     "metadata": {
+      "cellLabel": "Out[79]= ",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<div class=\"wexpr\"><wrow><w></w><w>NotebookPath</w><wrow><w></w><wb>[</wb><wb>]</wb></wrow></wrow></div>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "NotebookPath[]",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "b006a4cb-b58b-407f-a7b5-d252f9e4ce3a",
+     "metadata": {
+      "cellLabel": "Out[80]= ",
+      "isBoxData": false
+     }
+    }
+   ],
    "metadata": {},
    "executionSummary": {
     "timing": {
-     "startTime": 1785851568892,
-     "endTime": 1785851569018
+     "startTime": 1785855237080,
+     "endTime": 1785855237456
     },
-    "executionOrder": 40,
+    "executionOrder": 77,
     "success": true
    }
   },
@@ -29,14 +81,7 @@
    "languageId": "wolfram",
    "outputs": [],
    "metadata": {},
-   "executionSummary": {
-    "timing": {
-     "startTime": 1785851572046,
-     "endTime": 1785851572413
-    },
-    "executionOrder": 42,
-    "success": true
-   }
+   "executionSummary": {}
   },
   {
    "kind": 1,
@@ -62,7 +107,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "6018ace8-0ea5-4e77-8c1f-1cce9836df0f",
+     "id": "5158b1c4-bfc1-4e9a-b53d-57f8d8c64ef3",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -79,7 +124,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "2b5ae423-0ccc-4ba6-b77b-74ffb0025335",
+     "id": "b4f69759-154d-4c06-b6cb-7730470b24c8",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -96,7 +141,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "b901127a-baa1-4a29-bb4f-a1b123632e6a",
+     "id": "823cc1d1-2ba4-4720-86fb-5cf10332bbbb",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -104,14 +149,7 @@
     }
    ],
    "metadata": {},
-   "executionSummary": {
-    "timing": {
-     "startTime": 1785850917698,
-     "endTime": 1785850918316
-    },
-    "executionOrder": 9,
-    "success": true
-   }
+   "executionSummary": {}
   },
   {
    "kind": 1,
@@ -138,7 +176,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "46fa5488-0358-449e-84b4-ec43d4a1f344",
+     "id": "c35acb32-4f59-4a05-8dc5-cf2b5f0e9d38",
      "metadata": {
       "cellLabel": "Out[16]//MatrixForm= ",
       "isBoxData": false
@@ -146,32 +184,25 @@
     }
    ],
    "metadata": {},
-   "executionSummary": {
-    "timing": {
-     "startTime": 1785850918316,
-     "endTime": 1785850918896
-    },
-    "executionOrder": 16,
-    "success": true
-   }
+   "executionSummary": {}
   },
   {
    "kind": 2,
-   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/CubeAttack.wl\"]\n\nmaxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};\n\npositionZeroLista = BLR[maxterms];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMC=Flatten[CubeOffline[maxterms, positionZeroLista],1];\nTN=Flatten[CubeOnline[key, maxterms, positionZeroLista],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\n(* Print[\"Bit della chiave trovata: \", LinearSolve[MC, TN, Modulus->2]] *)\nPrint[\"Bit della chiave trovata: \", LinearSolve[MCridotta, TNridotta, Modulus->2]]",
+   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\nmaxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}};\n\npositionZeroLista = BLR[maxterms];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMC=Flatten[CubeOffline[maxterms, positionZeroLista],1];\nTN=Flatten[CubeOnline[key, maxterms, positionZeroLista],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\n(* Print[\"Bit della chiave trovata: \", LinearSolve[MC, TN, Modulus->2]] *)\nPrint[\"Bit della chiave trovata: \", LinearSolve[MCridotta, TNridotta, Modulus->2]]\n\n(* BRUTE FORCE *)\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta];",
    "languageId": "wolfram",
    "outputs": [
     {
      "items": [
       {
-       "data": "<pre>1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\n\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\n\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\n\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\n\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\n\n0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   k6    0\n\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\n\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\n\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\n\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\n\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k11   1\n\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k12   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k13   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   k14   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k15   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k16   0\n</pre>",
+       "data": "<pre>1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\n\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\n\n0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   0   k3    0\n\n0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   k4    0\n\n0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   k5    0\n\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\n\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\n\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\n\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\n\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k11   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k12   0\n\n                                                                k13\n\n                                                                k14\n\n                                                                k15\n\n                                                                k16\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\\n\\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\\n\\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\\n\\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\\n\\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\\n\\n0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   k6    0\\n\\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\\n\\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\\n\\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\\n\\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\\n\\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k11   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k12   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k13   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   k14   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k15   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k16   0\\n\"",
+       "data": "\"1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\\n\\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\\n\\n0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   0   k3    0\\n\\n0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   k4    0\\n\\n0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   k5    0\\n\\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\\n\\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\\n\\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\\n\\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\\n\\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k11   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k12   0\\n\\n                                                                k13\\n\\n                                                                k14\\n\\n                                                                k15\\n\\n                                                                k16\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "5388f049-a448-40cb-99d2-969619e464fe",
+     "id": "d225b6b7-f5bb-493f-9e86-8fa3a024f681",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -188,7 +219,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "e4a4a180-b28d-4ead-963e-d52e1240d3f1",
+     "id": "561f5d21-f27f-40de-9a2f-3273340e9a4b",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -197,15 +228,66 @@
     {
      "items": [
       {
-       "data": "<pre>Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
+       "data": "<pre>Bit della chiave trovata: {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0}\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
+       "data": "\"Bit della chiave trovata: {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0}\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "c0889329-206d-4de7-ad61-ee5807dd1f7d",
+     "id": "719b0007-602c-4087-9f2a-28c70000b106",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Numero di soluzioni trovate: 16\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Numero di soluzioni trovate: 16\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "3aa38d42-07f3-4550-92dd-4745a642c64b",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Tutte le chiavi possibili:\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Tutte le chiavi possibili:\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "de7a8b41-1a21-49da-93d2-70797c6bd3ff",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>1   0   0   0   0   0   1   0   1   0   0   0   0   0   1   0\n\n1   0   1   0   0   0   1   0   1   0   1   0   0   0   1   0\n\n1   0   0   1   0   0   1   0   1   0   0   1   0   0   1   0\n\n1   0   1   1   0   0   1   0   1   0   1   1   0   0   1   0\n\n1   0   0   0   1   0   1   0   1   0   0   0   1   0   1   0\n\n1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\n\n1   0   0   1   1   0   1   0   1   0   0   1   1   0   1   0\n\n1   0   1   1   1   0   1   0   1   0   1   1   1   0   1   0\n\n1   0   0   0   0   1   1   0   1   0   0   0   0   1   1   0\n\n1   0   1   0   0   1   1   0   1   0   1   0   0   1   1   0\n\n1   0   0   1   0   1   1   0   1   0   0   1   0   1   1   0\n\n1   0   1   1   0   1   1   0   1   0   1   1   0   1   1   0\n\n1   0   0   0   1   1   1   0   1   0   0   0   1   1   1   0\n\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\n\n1   0   0   1   1   1   1   0   1   0   0   1   1   1   1   0\n\n1   0   1   1   1   1   1   0   1   0   1   1   1   1   1   0\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"1   0   0   0   0   0   1   0   1   0   0   0   0   0   1   0\\n\\n1   0   1   0   0   0   1   0   1   0   1   0   0   0   1   0\\n\\n1   0   0   1   0   0   1   0   1   0   0   1   0   0   1   0\\n\\n1   0   1   1   0   0   1   0   1   0   1   1   0   0   1   0\\n\\n1   0   0   0   1   0   1   0   1   0   0   0   1   0   1   0\\n\\n1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\\n\\n1   0   0   1   1   0   1   0   1   0   0   1   1   0   1   0\\n\\n1   0   1   1   1   0   1   0   1   0   1   1   1   0   1   0\\n\\n1   0   0   0   0   1   1   0   1   0   0   0   0   1   1   0\\n\\n1   0   1   0   0   1   1   0   1   0   1   0   0   1   1   0\\n\\n1   0   0   1   0   1   1   0   1   0   0   1   0   1   1   0\\n\\n1   0   1   1   0   1   1   0   1   0   1   1   0   1   1   0\\n\\n1   0   0   0   1   1   1   0   1   0   0   0   1   1   1   0\\n\\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\\n\\n1   0   0   1   1   1   1   0   1   0   0   1   1   1   1   0\\n\\n1   0   1   1   1   1   1   0   1   0   1   1   1   1   1   0\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "0a608c35-58c4-4176-af21-44283a6da935",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -213,14 +295,7 @@
     }
    ],
    "metadata": {},
-   "executionSummary": {
-    "timing": {
-     "startTime": 1785851576046,
-     "endTime": 1785851589851
-    },
-    "executionOrder": 48,
-    "success": true
-   }
+   "executionSummary": {}
   },
   {
    "kind": 2,
@@ -238,9 +313,9 @@
        "mime": "text/plain"
       }
      ],
-     "id": "729bb590-94c7-434d-8a99-0a2bb867d753",
+     "id": "ddc4553a-034f-4e30-841a-27d7c0172b0f",
      "metadata": {
-      "cellLabel": "Out[38]= ",
+      "cellLabel": "Out[39]= ",
       "isBoxData": false
      }
     },
@@ -255,22 +330,15 @@
        "mime": "text/plain"
       }
      ],
-     "id": "6b048ade-cb74-4cb2-b724-bf220dc72a02",
+     "id": "01892c3e-d0dc-45f3-9deb-30e4d37ff770",
      "metadata": {
-      "cellLabel": "Out[39]= ",
+      "cellLabel": "Out[40]= ",
       "isBoxData": false
      }
     }
    ],
    "metadata": {},
-   "executionSummary": {
-    "timing": {
-     "startTime": 1785850933255,
-     "endTime": 1785850934024
-    },
-    "executionOrder": 29,
-    "success": true
-   }
+   "executionSummary": {}
   }
  ]
 }
