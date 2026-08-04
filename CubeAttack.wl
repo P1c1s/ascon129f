@@ -125,3 +125,32 @@ CubeOnline[key_List, maxterms_List, positionZeroLista_List] := Module[
       {terminiNotiGrezzi, positionZeroLista}
    ]
 ]
+
+(* BRUTE FORCE *)
+
+BruteForce[MCridotta_, TNridotta_] := Module[
+  {solParticolare, ker, combinazioniCoeff, tutteLeSoluzioni},
+
+  (* 1. Trova una soluzione particolare *)
+  solParticolare = LinearSolve[MCridotta, TNridotta, Modulus -> 2];
+
+  (* 2. Trova la base dello spazio nullo (parametri liberi) *)
+  ker = NullSpace[MCridotta, Modulus -> 2];
+
+  (* 3. Genera tutti i possibili coefficienti binari {0, 1} per i vettori di base *)
+  combinazioniCoeff = Tuples[{0, 1}, Length[ker]];
+
+  (* 4. Genera l'insieme di tutte le soluzioni *)
+  tutteLeSoluzioni = Mod[
+    Table[solParticolare + c . ker, {c, combinazioniCoeff}],
+    2
+  ];
+
+  (* Stampa dei risultati *)
+  Print["Numero di soluzioni trovate: ", Length[tutteLeSoluzioni]];
+  Print["Tutte le chiavi possibili:"];
+  Print[MatrixForm[tutteLeSoluzioni]];
+
+  (* Restituisce la lista delle soluzioni *)
+  tutteLeSoluzioni
+]
