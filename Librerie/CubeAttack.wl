@@ -1,9 +1,6 @@
 (* Definizione delle chiavi unitarie usate in CubeOffline *)
 keysUnit = IdentityMatrix[16];
 
-(* Versione da usare dentro i test ... *)
-AsconNRound[key_,nonce_]:= Ascon129f[key, nonce, 1];
-
 (* A partire da una lista di indici genera le varie combinazioni di grado dei maxterm *)
 GenerateMaxterms[indexes_List, degrees_List] := Flatten[Map[Subsets[indexes, {#}]&, degrees], 1]
 
