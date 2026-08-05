@@ -2,12 +2,10 @@ Get["/home/lorenzo/Documenti/GitHubProjects/ascon129f/Esempi/vars.wl"]
 Get["/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/Ascon.wl"]
 
 plaintext = "Testo di prova";
-
-cyphertext = AsconEncrypt[plaintext, key, nonce];
-msgDecifrato = AsconDecrypt[testoCifrato, key, nonce];
+bitCifrati = AsconEncrypt[plaintext, key, nonce];
+bitDecifrati = AsconDecrypt[bitCifrati, key, nonce];
 
 Print["Il testo in chiaro e': ", plaintext]
-Print["Il testo cifrato e': ", BitsToHex[cyphertext]]
-Print["Il testo decifrato e': ", BitsToString[msgDecifrato]]
-
-BitsToHexDigits[bits_List] := StringJoin[ToUpperCase[IntegerString[FromDigits[#, 2], 16, 2]] & /@ bits]
+Print["I bit cifrati sono: ", bitCifrati]
+Print["Cyphertext: ", BitsToString[bitCifrati]]
+Print["Il testo decifrato e': ", BitsToString[bitDecifrati]]
