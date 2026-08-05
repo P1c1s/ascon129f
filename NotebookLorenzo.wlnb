@@ -65,29 +65,60 @@
   },
   {
    "kind": 2,
-   "value": "Ascon129f[keys,nonces,1] // MatrixForm",
+   "value": "Ascon129f[keys,nonces,1] //MatrixForm",
    "languageId": "wolfram",
    "outputs": [],
    "metadata": {},
    "executionSummary": {}
   },
   {
+   "kind": 1,
+   "value": "Fase offline del Cube Attack per il recupero delle equazioni lineari",
+   "languageId": "markdown",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {}
+  },
+  {
    "kind": 2,
-   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\n(* maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}}; *)\n\nnRound = 1;\ngradiMaxterm = {1};\n\nmaxterms = RandomMaxterms[15, gradiMaxterm];\npositionZeroLista = BLR[maxterms, nRound];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMC=Flatten[CubeOffline[maxterms, positionZeroLista, nRound], 1];\nTN=Flatten[CubeOnline[key, maxterms, positionZeroLista, nRound],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\nPrint[\"Bit della chiave trovata: \", LinearSolve[MC, TN, Modulus->2]]\nPrint[\"Bit della chiave trovata: \", LinearSolve[MCridotta, TNridotta, Modulus->2]]\n\n(* BRUTE FORCE *)\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta];",
+   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\n(* maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}}; *)\n\nnRound = 1; (* Round da eseguire *)\ngradiMaxterm = {1}; (* Lista gradi maxterm *)\nnMaxterm = 15; (* Numero di maxterm da testare *)\n\nmaxterms = RandomMaxterms[nMaxterm, gradiMaxterm];\npositionZeroLista = BLR[maxterms, nRound];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMatriceCoefficenti = Flatten[CubeOffline[maxterms, positionZeroLista, nRound], 1];\n(* TN=Flatten[CubeOnline[key, maxterms, positionZeroLista, nRound],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta]; *)",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785941661957,
+     "endTime": 1785941672725
+    },
+    "executionOrder": 90,
+    "success": true
+   }
+  },
+  {
+   "kind": 1,
+   "value": "Fase online del Cube Attack per la ricerca della chiave",
+   "languageId": "markdown",
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {}
+  },
+  {
+   "kind": 2,
+   "value": "VettoreColonnaTerminiNoti = Flatten[CubeOnline[key, maxterms, positionZeroLista, nRound],1];\n\n\n{MCridotta, TNridotta} = RiduciSistema[MatriceCoefficenti, VettoreColonnaTerminiNoti];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\nPrint[\"Bit della chiave:         \", key]\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta];\n",
    "languageId": "wolfram",
    "outputs": [
     {
      "items": [
       {
-       "data": "<pre>1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\n\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\n\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\n\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\n\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\n\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\n\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\n\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\n\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\n\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\n\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k11   1\n\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k12   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k13   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k14   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k15   0\n\n                                                                k16\n</pre>",
+       "data": "<pre>1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\n\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\n\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\n\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\n\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\n\n0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   k6    0\n\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\n\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\n\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k9    0\n\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k10   1\n\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k11   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k12   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   k13   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k14   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k15   0\n\n                                                                k16\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\\n\\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\\n\\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\\n\\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\\n\\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\\n\\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\\n\\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\\n\\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\\n\\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\\n\\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\\n\\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k11   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k12   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k13   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k14   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k15   0\\n\\n                                                                k16\\n\"",
+       "data": "\"1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\\n\\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\\n\\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\\n\\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\\n\\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\\n\\n0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   k6    0\\n\\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\\n\\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\\n\\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k9    0\\n\\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k10   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k11   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k12   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   k13   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k14   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k15   0\\n\\n                                                                k16\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "4a8a0965-54d0-4bb9-ba4c-cc45a8317147",
+     "id": "57a16874-22ed-42b2-8dbc-8061d898a44d",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -104,41 +135,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "3de9b6d2-9fff-4642-91a5-7783bd94f65a",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre>Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "6e889f1f-2fb8-4942-b965-70d983f9f447",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre>Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "dc1ad740-a52f-4df4-a19c-82d0e78c0c56",
+     "id": "02541427-8c61-434a-874d-c396ef166631",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -155,7 +152,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "7ee1bd9e-803c-49a9-b96d-7729c4c790d5",
+     "id": "1e6e1fe3-82bb-4e98-b717-39a71979e2b6",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -172,7 +169,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "e657083e-960d-4f61-8352-3b33f0f89b8d",
+     "id": "374c9fab-0eeb-412a-97d9-120da4f452f9",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -181,15 +178,15 @@
     {
      "items": [
       {
-       "data": "<pre>1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\n\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\n</pre>",
+       "data": "<pre>1   0   1   0   1   0   1   0   0   0   1   0   1   0   1   0\n\n1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\\n\\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\\n\"",
+       "data": "\"1   0   1   0   1   0   1   0   0   0   1   0   1   0   1   0\\n\\n1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "cac00282-3f62-4451-825b-b7f1e9d0c316",
+     "id": "f654d814-5119-41f8-9161-7640174fc3e7",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -199,28 +196,12 @@
    "metadata": {},
    "executionSummary": {
     "timing": {
-     "startTime": 1785938332201,
-     "endTime": 1785938343918
+     "startTime": 1785942101038,
+     "endTime": 1785942101631
     },
-    "executionOrder": 9,
+    "executionOrder": 107,
     "success": true
    }
-  },
-  {
-   "kind": 2,
-   "value": "(* maxtermsIndexes={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};\n\nmaxtermsIndexes = Range[Length[nonce]];\n\nGenerateMaxterms[indexes_List, num_] := Flatten[Map[Subsets[indexes,{#}]&, num],1];\nmaxterms = GenerateMaxterms[maxtermsIndexes,{1,2,3,4,5}];\nmaxterms = RandomSample[maxterms, 20];\nm = {{1, 1, 0}, {0, 1, 1}, {1, 1, 1}, {0, 1, 0}};\nn = {1, 0, 1, 0};\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[m, Partition[n, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nmRidotta = rref[[All, 1 ;; Last[Dimensions[m]]]]\nnRidotto = rref[[All, -1]] *)\n",
-   "languageId": "wolfram",
-   "outputs": [],
-   "metadata": {},
-   "executionSummary": {}
-  },
-  {
-   "kind": 2,
-   "value": "substitutionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},\n  {x1, x2, x3, x4, x5} = stato;\n  \n  (* Trasponiamo per trattare ogni colonna di 5 bit *)\n  trasposta = Transpose[{x1, x2, x3, x4, x5}];\n  \n  nuovaTrasposta = Map[Function[col,\n     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]], colTrasformata},\n      \n      (* Calcoliamo la nuova colonna di 5 bit *)\n      colTrasformata = {\n        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],\n        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],\n        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],\n        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],\n        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]\n      };\n      \n      (* Stampa: Colonna Originale -> Colonna Trasformata *)\n      Print[col, \" -> \", colTrasformata];\n      \n      (* Restituisce la colonna modificata *)\n      colTrasformata\n     ]\n    ], trasposta];\n    \n  Transpose[nuovaTrasposta]\n];\n\nsubstitutionLayer[Struct[keys, nonces]]",
-   "languageId": "wolfram",
-   "outputs": [],
-   "metadata": {},
-   "executionSummary": {}
   },
   {
    "kind": 2,

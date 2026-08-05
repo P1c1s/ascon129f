@@ -143,3 +143,17 @@ BruteForce[MCridotta_, TNridotta_] := Module[
   (* Restituisce la lista delle soluzioni *)
   tutteLeSoluzioni
 ]
+
+RiduciSistema[MC_, TN_] := Module[{aug, rref, MCridotta, TNridotta},
+  (* 1. Matrice aumentata [M | N] *)
+  aug = Join[MC, Partition[TN, 1], 2];
+  
+  (* 2. Riduzione modulo 2 ed eliminazione righe nulle *)
+  rref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];
+  
+  (* 3. Estrazione M e N ridotte *)
+  MCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];
+  TNridotta = rref[[All, -1]];
+  
+  {MCridotta, TNridotta}
+]
