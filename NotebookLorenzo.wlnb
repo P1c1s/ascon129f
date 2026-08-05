@@ -48,11 +48,87 @@
   },
   {
    "kind": 2,
-   "value": "plaintext = \"Testo di prova\";\n\ncyphertext = AsconEncrypt[plaintext, key, nonce];\nmsgDecifrato = AsconDecrypt[testoCifrato, key, nonce];\n\nPrint[\"Il testo in chiaro e': \", plaintext]\nPrint[\"Il testo cifrato e': \", BitsToHex[cyphertext]]\nPrint[\"Il testo decifrato e': \", BitsToString[msgDecifrato]]\n\nBitsToHexDigits[bits_List] := StringJoin[ToUpperCase[IntegerString[FromDigits[#, 2], 16, 2]] & /@ bits]",
+   "value": "plaintext = \"Testo di prova\";\nbitCifrati = AsconEncrypt[plaintext, key, nonce];\nbitDecifrati = AsconDecrypt[bitCifrati, key, nonce];\n\nPrint[\"Il testo in chiaro e': \", plaintext]\nPrint[\"I bit cifrati sono: \", bitCifrati]\nPrint[\"Cyphertext: \", BitsToString[bitCifrati]]\nPrint[\"Il testo decifrato e': \", BitsToString[bitDecifrati]]",
    "languageId": "wolfram",
-   "outputs": [],
+   "outputs": [
+    {
+     "items": [
+      {
+       "data": "<pre>Il testo in chiaro e': Testo di prova\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Il testo in chiaro e': Testo di prova\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "bd36557a-f0b8-496a-9b9a-b55553a6399b",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>I bit cifrati sono: {{0, 1, 1, 0, 1, 0, 0, 0}, {1, 1, 1, 0, 1, 1, 0, 1}, \n \n&gt;    {1, 0, 0, 1, 1, 1, 1, 1}, {0, 1, 1, 1, 0, 0, 1, 0}, \n \n&gt;    {0, 1, 1, 0, 1, 1, 0, 0}, {1, 1, 0, 0, 0, 0, 1, 1}, \n \n&gt;    {1, 1, 1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 0, 0, 0, 0}, \n \n&gt;    {1, 1, 0, 0, 1, 0, 1, 1}, {1, 0, 1, 1, 1, 0, 1, 0}, \n \n&gt;    {0, 0, 0, 0, 0, 0, 1, 0}, {1, 1, 0, 1, 1, 0, 1, 1}, \n \n&gt;    {0, 1, 0, 1, 1, 1, 0, 0}, {1, 1, 0, 1, 0, 0, 1, 0}}\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"I bit cifrati sono: {{0, 1, 1, 0, 1, 0, 0, 0}, {1, 1, 1, 0, 1, 1, 0, 1}, \\n \\n>    {1, 0, 0, 1, 1, 1, 1, 1}, {0, 1, 1, 1, 0, 0, 1, 0}, \\n \\n>    {0, 1, 1, 0, 1, 1, 0, 0}, {1, 1, 0, 0, 0, 0, 1, 1}, \\n \\n>    {1, 1, 1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 0, 0, 0, 0}, \\n \\n>    {1, 1, 0, 0, 1, 0, 1, 1}, {1, 0, 1, 1, 1, 0, 1, 0}, \\n \\n>    {0, 0, 0, 0, 0, 0, 1, 0}, {1, 1, 0, 1, 1, 0, 1, 1}, \\n \\n>    {0, 1, 0, 1, 1, 1, 0, 0}, {1, 1, 0, 1, 0, 0, 1, 0}}\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "18632209-1f07-4f26-97a3-8bf37094dbcd",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Cyphertext: hÃ­ÂrlÃÃ½Ã°ÃÂº\u0002Ã\\Ã\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Cyphertext: hÃ­ÂrlÃÃ½Ã°ÃÂº\u0002Ã\\\\Ã\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "4404174f-7751-4b49-b354-8ab670caae61",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Il testo decifrato e': Testo di prova\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Il testo decifrato e': Testo di prova\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "81c975e5-b5d5-4868-8df1-af0549ebe095",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    }
+   ],
    "metadata": {},
-   "executionSummary": {}
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785943872206,
+     "endTime": 1785943872913
+    },
+    "executionOrder": 194,
+    "success": true
+   }
   },
   {
    "kind": 1,
@@ -81,7 +157,7 @@
   },
   {
    "kind": 2,
-   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\n(* maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}}; *)\n\nnRound = 1; (* Round da eseguire *)\ngradiMaxterm = {1}; (* Lista gradi maxterm *)\nnMaxterm = 15; (* Numero di maxterm da testare *)\n\nmaxterms = RandomMaxterms[nMaxterm, gradiMaxterm];\npositionZeroLista = BLR[maxterms, nRound];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMatriceCoefficenti = Flatten[CubeOffline[maxterms, positionZeroLista, nRound], 1];\n(* TN=Flatten[CubeOnline[key, maxterms, positionZeroLista, nRound],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta]; *)",
+   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\n(* maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}}; *)\n\nnRound = 1; (* Round da eseguire *)\ngradiMaxterm = {1}; (* Lista gradi maxterm *)\nnMaxterm = 15; (* Numero di maxterm da testare *)\n\nmaxterms = RandomMaxterms[nMaxterm, gradiMaxterm];\npositionZeroLista = BLR[maxterms, nRound];\n\nMatriceCoefficenti = Flatten[CubeOffline[maxterms, positionZeroLista, nRound], 1];",
    "languageId": "wolfram",
    "outputs": [],
    "metadata": {},
@@ -202,14 +278,6 @@
     "executionOrder": 107,
     "success": true
    }
-  },
-  {
-   "kind": 2,
-   "value": "",
-   "languageId": "wolfram",
-   "outputs": [],
-   "metadata": {},
-   "executionSummary": {}
   }
  ]
 }
