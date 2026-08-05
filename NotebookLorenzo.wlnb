@@ -4,66 +4,14 @@
    "kind": 2,
    "value": "ClearAll[\"Global`*\"]\n\n(* Import della Libreria che implementa Ascon *)\nGet[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/Ascon.wl\"]",
    "languageId": "wolfram",
-   "outputs": [
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><w>/home</w></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"/home\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "c265555f-2d12-4c3d-8174-3d305d7dda12",
-     "metadata": {
-      "cellLabel": "Out[78]= ",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><w>/home/lorenzo</w></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"/home/lorenzo\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "24218ba1-eb5a-44f8-8bc1-a012696c809d",
-     "metadata": {
-      "cellLabel": "Out[79]= ",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><wrow><w></w><w>NotebookPath</w><wrow><w></w><wb>[</wb><wb>]</wb></wrow></wrow></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "NotebookPath[]",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "b006a4cb-b58b-407f-a7b5-d252f9e4ce3a",
-     "metadata": {
-      "cellLabel": "Out[80]= ",
-      "isBoxData": false
-     }
-    }
-   ],
+   "outputs": [],
    "metadata": {},
    "executionSummary": {
     "timing": {
-     "startTime": 1785855237080,
-     "endTime": 1785855237456
+     "startTime": 1785938326088,
+     "endTime": 1785938326340
     },
-    "executionOrder": 77,
+    "executionOrder": 1,
     "success": true
    }
   },
@@ -81,7 +29,14 @@
    "languageId": "wolfram",
    "outputs": [],
    "metadata": {},
-   "executionSummary": {}
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785938328732,
+     "endTime": 1785938329097
+    },
+    "executionOrder": 3,
+    "success": true
+   }
   },
   {
    "kind": 1,
@@ -95,59 +50,7 @@
    "kind": 2,
    "value": "plaintext = \"Testo di prova\";\n\ncyphertext = AsconEncrypt[plaintext, key, nonce];\nmsgDecifrato = AsconDecrypt[testoCifrato, key, nonce];\n\nPrint[\"Il testo in chiaro e': \", plaintext]\nPrint[\"Il testo cifrato e': \", BitsToHex[cyphertext]]\nPrint[\"Il testo decifrato e': \", BitsToString[msgDecifrato]]\n\nBitsToHexDigits[bits_List] := StringJoin[ToUpperCase[IntegerString[FromDigits[#, 2], 16, 2]] & /@ bits]",
    "languageId": "wolfram",
-   "outputs": [
-    {
-     "items": [
-      {
-       "data": "<pre>Il testo in chiaro e': Testo di prova\n</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"Il testo in chiaro e': Testo di prova\\n\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "5158b1c4-bfc1-4e9a-b53d-57f8d8c64ef3",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre>Il testo cifrato e': {{1, 9, 15, 5}, {3, 7, 14, 7}, {3, 6, 13, 0}, \n \n&gt;    {12, 13, 7}, {3, 10, 11, 6}, {1, 10, 8, 2}, {13, 3, 13}, {1, 9, 10, 4}}\n</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"Il testo cifrato e': {{1, 9, 15, 5}, {3, 7, 14, 7}, {3, 6, 13, 0}, \\n \\n>    {12, 13, 7}, {3, 10, 11, 6}, {1, 10, 8, 2}, {13, 3, 13}, {1, 9, 10, 4}}\\n\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "b4f69759-154d-4c06-b6cb-7730470b24c8",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<pre>Il testo decifrato e': BitsToString[AsconDecrypt[testoCifrato, \n \n&gt;     {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, \n \n&gt;     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}]]\n</pre>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "\"Il testo decifrato e': BitsToString[AsconDecrypt[testoCifrato, \\n \\n>     {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}, \\n \\n>     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}]]\\n\"",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "823cc1d1-2ba4-4720-86fb-5cf10332bbbb",
-     "metadata": {
-      "cellLabel": "",
-      "isBoxData": false
-     }
-    }
-   ],
+   "outputs": [],
    "metadata": {},
    "executionSummary": {}
   },
@@ -164,45 +67,27 @@
    "kind": 2,
    "value": "Ascon129f[keys,nonces,1] // MatrixForm",
    "languageId": "wolfram",
-   "outputs": [
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><wrow><w></w><wb>(</wb><w>⁠</w><wgrid style=\"grid-template-columns:repeat(8,max-content);\"><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><w>n1</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n5</w><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n2</w><w>+</w><w>n6</w><w>+</w><w>n7</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k3</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n3</w><w>+</w><w>n7</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k12</w><w>+</w><w>k16</w><w>+</w><w>k4</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><w>n1</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n4</w><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k13</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><w>n1</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n2</w><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k14</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><w>k3</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n2</w><w>+</w><w>n3</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k15</w><w>+</w><w>k3</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k4</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n3</w><w>+</w><w>n4</w><w>+</w><w>n7</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k16</w><w>+</w><w>k4</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n4</w><w>+</w><w>n5</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k10</w><w>+</w><w>k12</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>n1</w></wrow><w>+</w><wrow><w></w><w>k9</w><w></w><w>n1</w></wrow><w>+</w><w>n10</w><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n4</w></wrow><w>+</w><w>n9</w></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k13</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>n10</w><w>+</w><w>n11</w><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n3</w></wrow><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n5</w></wrow></wrow></w><w><wrow><w></w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k14</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>n11</w><w>+</w><w>n12</w><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n4</w></wrow><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n6</w></wrow></wrow></w><w><wrow><w></w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k15</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>k4</w></wrow><w>+</w><w>k5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>n12</w><w>+</w><w>n13</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>k4</w><w></w><w>n4</w></wrow><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n5</w></wrow><w>+</w><w>n7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n7</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k16</w><w>+</w><w>k5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>k5</w></wrow><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>n13</w><w>+</w><w>n14</w><w>+</w><w>n16</w><w>+</w><w>n5</w><w>+</w><wrow><w></w><w>k13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>k5</w><w></w><w>n5</w></wrow><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n6</w></wrow><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>n8</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>k6</w></wrow><w>+</w><w>k7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>n1</w></wrow><w>+</w><wrow><w></w><w>k9</w><w></w><w>n1</w></wrow><w>+</w><w>n14</w><w>+</w><w>n15</w><w>+</w><w>n6</w><w>+</w><wrow><w></w><w>k14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>k6</w><w></w><w>n6</w></wrow><w>+</w><w>n7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n7</w></wrow><w>+</w><w>n9</w></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>k2</w></wrow><w>+</w><w>k7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>k7</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>n10</w><w>+</w><w>n15</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>k2</w><w></w><w>n2</w></wrow><w>+</w><w>n7</w><w>+</w><wrow><w></w><w>k15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>k7</w><w></w><w>n7</w></wrow><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>n8</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>k11</w><w>+</w><w>k16</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>k3</w></wrow><w>+</w><w>k8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>k8</w></wrow><w>+</w><w>k9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>k9</w></wrow><w>+</w><wrow><w></w><w>k1</w><w></w><w>n1</w></wrow><w>+</w><wrow><w></w><w>k9</w><w></w><w>n1</w></wrow><w>+</w><w>n11</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>k3</w><w></w><w>n3</w></wrow><w>+</w><w>n8</w><w>+</w><wrow><w></w><w>k16</w><w></w><w>n8</w></wrow><w>+</w><wrow><w></w><w>k8</w><w></w><w>n8</w></wrow><w>+</w><w>n9</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k11</w><w>+</w><w>k16</w><w>+</w><w>k3</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n11</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>n11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>n16</w><w></w><w>n8</w></wrow><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>n1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k12</w><w>+</w><w>k2</w><w>+</w><w>k4</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>n10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>n12</w><w></w><w>n4</w></wrow><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>n1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k13</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k5</w><w>+</w><w>n10</w><w>+</w><w>n11</w><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>n10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>n11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>n13</w><w></w><w>n5</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k14</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>k6</w><w>+</w><w>n11</w><w>+</w><w>n12</w><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>n11</w><w></w><w>n3</w></wrow><w>+</w><wrow><w></w><w>n12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>n14</w><w></w><w>n6</w></wrow></wrow></w><w><wrow><w></w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k15</w><w>+</w><w>k4</w><w>+</w><w>k5</w><w>+</w><w>k7</w><w>+</w><w>n12</w><w>+</w><w>n13</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>n12</w><w></w><w>n4</w></wrow><w>+</w><wrow><w></w><w>n13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>n15</w><w></w><w>n7</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k16</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>k8</w><w>+</w><w>n13</w><w>+</w><w>n14</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>n13</w><w></w><w>n5</w></wrow><w>+</w><wrow><w></w><w>n14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>n16</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>k1</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>k9</w><w>+</w><w>n14</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>n14</w><w></w><w>n6</w></wrow><w>+</w><wrow><w></w><w>n15</w><w></w><w>n7</w></wrow><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>n1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k10</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k2</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>n10</w><w>+</w><w>n15</w><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>n10</w><w></w><w>n2</w></wrow><w>+</w><wrow><w></w><w>n15</w><w></w><w>n7</w></wrow><w>+</w><wrow><w></w><w>n16</w><w></w><w>n8</w></wrow></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n16</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k16</w><w>+</w><w>k2</w><w>+</w><w>k8</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n16</w><w>+</w><w>n2</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k9</w><w>+</w><w>n10</w><w>+</w><w>n2</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k10</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k2</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>n10</w><w>+</w><w>n2</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k11</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k3</w><w>+</w><w>k4</w><w>+</w><w>k5</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k12</w><w>+</w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k4</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>n14</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>k13</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k5</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>n14</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>1</w><w>+</w><w>k14</w><w>+</w><w>k15</w><w>+</w><w>k16</w><w>+</w><w>k6</w><w>+</w><w>k7</w><w>+</w><w>k8</w><w>+</w><w>n14</w><w>+</w><w>n16</w><w>+</w><w>n6</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>k2</w><w>+</w><w>k8</w><w>+</w><w>n1</w><w>+</w><w>n10</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n2</w><w>+</w><w>n8</w><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k2</w><w>+</w><w>n1</w><w>+</w><w>n10</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><w>n11</w><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><w>n2</w><w>+</w><w>n3</w><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w><w><wrow><w></w><w>k2</w><w>+</w><w>n10</w><w>+</w><wrow><w></w><w>k2</w><w></w><w>n10</w></wrow><w>+</w><w>n11</w><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n2</w><w>+</w><w>n3</w><w>+</w><w>n4</w></wrow></w><w><wrow><w></w><w>n11</w><w>+</w><wrow><w></w><w>k3</w><w></w><w>n11</w></wrow><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n3</w><w>+</w><w>n4</w><w>+</w><w>n5</w></wrow></w><w><wrow><w></w><w>k6</w><w>+</w><w>n12</w><w>+</w><wrow><w></w><w>k4</w><w></w><w>n12</w></wrow><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n4</w><w>+</w><w>n5</w><w>+</w><w>n6</w></wrow></w><w><wrow><w></w><w>k6</w><w>+</w><w>n13</w><w>+</w><wrow><w></w><w>k5</w><w></w><w>n13</w></wrow><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n5</w><w>+</w><w>n6</w><w>+</w><w>n7</w></wrow></w><w><wrow><w></w><w>k6</w><w>+</w><w>k8</w><w>+</w><w>n14</w><w>+</w><wrow><w></w><w>k6</w><w></w><w>n14</w></wrow><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n6</w><w>+</w><w>n7</w><w>+</w><w>n8</w></wrow></w><w><wrow><w></w><w>k8</w><w>+</w><w>n1</w><w>+</w><w>n15</w><w>+</w><wrow><w></w><w>k7</w><w></w><w>n15</w></wrow><w>+</w><w>n16</w><w>+</w><wrow><w></w><w>k8</w><w></w><w>n16</w></wrow><w>+</w><w>n7</w><w>+</w><w>n8</w><w>+</w><w>n9</w><w>+</w><wrow><w></w><w>k1</w><w></w><w>n9</w></wrow></wrow></w></wgrid><w>⁠</w><wb>)</wb></wrow></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "MatrixForm[{{1 + k1 + k13 + k14 + k13*k5 + k6 + k14*k6 + k9 + k1*k9 + n1 + k5*n13 + k6*n14 + n5 + n6 + k1*n9, k10 + k14 + k15 + k10*k2 + k6 + k14*k6 + k15*k7 + k2*n10 + k6*n14 + k7*n15 + n2 + n6 + n7, 1 + k11 + k15 + k16 + k3 + k11*k3 + k15*k7 + k8 + k16*k8 + k3*n11 + k7*n15 + k8*n16 + n3 + n7 + n8, k1 + k12 + k16 + k4 + k12*k4 + k8 + k16*k8 + k9 + k1*k9 + n1 + k4*n12 + k8*n16 + n4 + n8 + k1*n9, k1 + k10 + k13 + k10*k2 + k13*k5 + k9 + k1*k9 + n1 + k2*n10 + k5*n13 + n2 + n5 + k1*n9, 1 + k10 + k11 + k14 + k10*k2 + k3 + k11*k3 + k6 + k14*k6 + k2*n10 + k3*n11 + k6*n14 + n2 + n3 + n6, 1 + k11 + k12 + k15 + k3 + k11*k3 + k4 + k12*k4 + k15*k7 + k3*n11 + k4*n12 + k7*n15 + n3 + n4 + n7, 1 + k12 + k13 + k16 + k4 + k12*k4 + k13*k5 + k8 + k16*k8 + k4*n12 + k5*n13 + k8*n16 + n4 + n5 + n8}, {1 + k10 + k12 + k10*k2 + k12*k4 + k9 + k1*k9 + k1*n1 + k9*n1 + n10 + n12 + k10*n2 + k2*n2 + k12*n4 + k4*n4 + n9, k10 + k11 + k13 + k10*k2 + k11*k3 + k5 + k13*k5 + n10 + n11 + n13 + k10*n2 + k2*n2 + k11*n3 + k3*n3 + n5 + k13*n5 + k5*n5, k11 + k12 + k14 + k11*k3 + k12*k4 + k6 + k14*k6 + n11 + n12 + n14 + k11*n3 + k3*n3 + k12*n4 + k4*n4 + n6 + k14*n6 + k6*n6, k12 + k13 + k15 + k12*k4 + k5 + k13*k5 + k7 + k15*k7 + n12 + n13 + n15 + k12*n4 + k4*n4 + n5 + k13*n5 + k5*n5 + n7 + k15*n7 + k7*n7, 1 + k13 + k14 + k16 + k5 + k13*k5 + k6 + k14*k6 + k8 + k16*k8 + n13 + n14 + n16 + n5 + k13*n5 + k5*n5 + n6 + k14*n6 + k6*n6 + n8 + k16*n8 + k8*n8, 1 + k14 + k15 + k6 + k14*k6 + k7 + k15*k7 + k9 + k1*k9 + k1*n1 + k9*n1 + n14 + n15 + n6 + k14*n6 + k6*n6 + n7 + k15*n7 + k7*n7 + n9, k10 + k15 + k16 + k10*k2 + k7 + k15*k7 + k8 + k16*k8 + n10 + n15 + n16 + k10*n2 + k2*n2 + n7 + k15*n7 + k7*n7 + n8 + k16*n8 + k8*n8, k11 + k16 + k11*k3 + k8 + k16*k8 + k9 + k1*k9 + k1*n1 + k9*n1 + n11 + n16 + k11*n3 + k3*n3 + n8 + k16*n8 + k8*n8 + n9}, {1 + k1 + k11 + k16 + k3 + k8 + k9 + n11 + n16 + n11*n3 + n16*n8 + n9 + n1*n9, k1 + k10 + k12 + k2 + k4 + k9 + n10 + n12 + n10*n2 + n12*n4 + n9 + n1*n9, 1 + k10 + k11 + k13 + k2 + k3 + k5 + n10 + n11 + n13 + n10*n2 + n11*n3 + n13*n5, 1 + k11 + k12 + k14 + k3 + k4 + k6 + n11 + n12 + n14 + n11*n3 + n12*n4 + n14*n6, k12 + k13 + k15 + k4 + k5 + k7 + n12 + n13 + n15 + n12*n4 + n13*n5 + n15*n7, 1 + k13 + k14 + k16 + k5 + k6 + k8 + n13 + n14 + n16 + n13*n5 + n14*n6 + n16*n8, k1 + k14 + k15 + k6 + k7 + k9 + n14 + n15 + n14*n6 + n15*n7 + n9 + n1*n9, k10 + k15 + k16 + k2 + k7 + k8 + n10 + n15 + n16 + n10*n2 + n15*n7 + n16*n8}, {1 + k1 + k15 + k16 + k7 + k8 + k9 + n16 + n8, 1 + k1 + k10 + k16 + k2 + k8 + k9 + n10 + n16 + n2 + n8, 1 + k1 + k10 + k11 + k2 + k3 + k9 + n10 + n2, 1 + k10 + k11 + k12 + k2 + k3 + k4 + n10 + n2, 1 + k11 + k12 + k13 + k3 + k4 + k5, 1 + k12 + k13 + k14 + k4 + k5 + k6 + n14 + n6, k13 + k14 + k15 + k5 + k6 + k7 + n14 + n6, 1 + k14 + k15 + k16 + k6 + k7 + k8 + n14 + n16 + n6 + n8}, {k2 + k8 + n1 + n10 + k2*n10 + n16 + k8*n16 + n2 + n8 + n9 + k1*n9, k2 + n1 + n10 + k2*n10 + n11 + k3*n11 + n2 + n3 + n9 + k1*n9, k2 + n10 + k2*n10 + n11 + k3*n11 + n12 + k4*n12 + n2 + n3 + n4, n11 + k3*n11 + n12 + k4*n12 + n13 + k5*n13 + n3 + n4 + n5, k6 + n12 + k4*n12 + n13 + k5*n13 + n14 + k6*n14 + n4 + n5 + n6, k6 + n13 + k5*n13 + n14 + k6*n14 + n15 + k7*n15 + n5 + n6 + n7, k6 + k8 + n14 + k6*n14 + n15 + k7*n15 + n16 + k8*n16 + n6 + n7 + n8, k8 + n1 + n15 + k7*n15 + n16 + k8*n16 + n7 + n8 + n9 + k1*n9}}]",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "c35acb32-4f59-4a05-8dc5-cf2b5f0e9d38",
-     "metadata": {
-      "cellLabel": "Out[16]//MatrixForm= ",
-      "isBoxData": false
-     }
-    }
-   ],
+   "outputs": [],
    "metadata": {},
    "executionSummary": {}
   },
   {
    "kind": 2,
-   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\nmaxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}};\n\npositionZeroLista = BLR[maxterms];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMC=Flatten[CubeOffline[maxterms, positionZeroLista],1];\nTN=Flatten[CubeOnline[key, maxterms, positionZeroLista],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\n(* Print[\"Bit della chiave trovata: \", LinearSolve[MC, TN, Modulus->2]] *)\nPrint[\"Bit della chiave trovata: \", LinearSolve[MCridotta, TNridotta, Modulus->2]]\n\n(* BRUTE FORCE *)\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta];",
+   "value": "Get[\"/home/lorenzo/Documenti/GitHubProjects/ascon129f/Librerie/CubeAttack.wl\"]\n\n(* maxterms={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{15},{16}}; *)\n\nnRound = 1;\ngradiMaxterm = {1};\n\nmaxterms = RandomMaxterms[15, gradiMaxterm];\npositionZeroLista = BLR[maxterms, nRound];\n\n(* Print[\"SISTEMA FINALE\"] *)\nMC=Flatten[CubeOffline[maxterms, positionZeroLista, nRound], 1];\nTN=Flatten[CubeOnline[key, maxterms, positionZeroLista, nRound],1];\n\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[MC, Partition[TN, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nMCridotta = rref[[All, 1 ;; Last[Dimensions[MC]]]];\nTNridotta = rref[[All, -1]];\n\nPrint[MatrixForm[MCridotta] ,\" x \", MatrixForm[keys],\" = \", MatrixForm[TNridotta]]\n\n\nPrint[\"Bit della chiave:         \", key]\nPrint[\"Bit della chiave trovata: \", LinearSolve[MC, TN, Modulus->2]]\nPrint[\"Bit della chiave trovata: \", LinearSolve[MCridotta, TNridotta, Modulus->2]]\n\n(* BRUTE FORCE *)\n\n(* Chiamata della funzione *)\nsoluzioni = BruteForce[MCridotta, TNridotta];",
    "languageId": "wolfram",
    "outputs": [
     {
      "items": [
       {
-       "data": "<pre>1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\n\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\n\n0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   0   k3    0\n\n0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   k4    0\n\n0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   k5    0\n\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\n\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\n\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\n\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\n\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k11   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k12   0\n\n                                                                k13\n\n                                                                k14\n\n                                                                k15\n\n                                                                k16\n</pre>",
+       "data": "<pre>1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\n\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\n\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\n\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\n\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\n\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\n\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\n\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\n\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\n\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\n\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k11   1\n\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k12   0\n\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k13   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k14   1\n\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k15   0\n\n                                                                k16\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\\n\\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\\n\\n0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   0   k3    0\\n\\n0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   0   k4    0\\n\\n0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   0   k5    0\\n\\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\\n\\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\\n\\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\\n\\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\\n\\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k11   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k12   0\\n\\n                                                                k13\\n\\n                                                                k14\\n\\n                                                                k15\\n\\n                                                                k16\\n\"",
+       "data": "\"1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0 x k1  = 1\\n\\n0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0   k2    0\\n\\n0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   0   k3    1\\n\\n0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   0   k4    0\\n\\n0   0   0   0   1   0   0   0   0   0   0   0   0   0   0   0   k5    1\\n\\n0   0   0   0   0   1   0   0   0   0   0   0   0   1   0   0   k6    0\\n\\n0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   0   k7    1\\n\\n0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   0   k8    0\\n\\n0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   0   k9    1\\n\\n0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   0   k10   0\\n\\n0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   0   k11   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   0   k12   0\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   1   0   0   0   k13   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   0   k14   1\\n\\n0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   1   k15   0\\n\\n                                                                k16\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "d225b6b7-f5bb-493f-9e86-8fa3a024f681",
+     "id": "4a8a0965-54d0-4bb9-ba4c-cc45a8317147",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -219,7 +104,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "561f5d21-f27f-40de-9a2f-3273340e9a4b",
+     "id": "3de9b6d2-9fff-4642-91a5-7783bd94f65a",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -228,15 +113,15 @@
     {
      "items": [
       {
-       "data": "<pre>Bit della chiave trovata: {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0}\n</pre>",
+       "data": "<pre>Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"Bit della chiave trovata: {1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0}\\n\"",
+       "data": "\"Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "719b0007-602c-4087-9f2a-28c70000b106",
+     "id": "6e889f1f-2fb8-4942-b965-70d983f9f447",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -245,15 +130,32 @@
     {
      "items": [
       {
-       "data": "<pre>Numero di soluzioni trovate: 16\n</pre>",
+       "data": "<pre>Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"Numero di soluzioni trovate: 16\\n\"",
+       "data": "\"Bit della chiave trovata: {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0}\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "3aa38d42-07f3-4550-92dd-4745a642c64b",
+     "id": "dc1ad740-a52f-4df4-a19c-82d0e78c0c56",
+     "metadata": {
+      "cellLabel": "",
+      "isBoxData": false
+     }
+    },
+    {
+     "items": [
+      {
+       "data": "<pre>Numero di soluzioni trovate: 2\n</pre>",
+       "mime": "x-application/wolfram-language-html"
+      },
+      {
+       "data": "\"Numero di soluzioni trovate: 2\\n\"",
+       "mime": "text/plain"
+      }
+     ],
+     "id": "7ee1bd9e-803c-49a9-b96d-7729c4c790d5",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -270,7 +172,7 @@
        "mime": "text/plain"
       }
      ],
-     "id": "de7a8b41-1a21-49da-93d2-70797c6bd3ff",
+     "id": "e657083e-960d-4f61-8352-3b33f0f89b8d",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -279,15 +181,15 @@
     {
      "items": [
       {
-       "data": "<pre>1   0   0   0   0   0   1   0   1   0   0   0   0   0   1   0\n\n1   0   1   0   0   0   1   0   1   0   1   0   0   0   1   0\n\n1   0   0   1   0   0   1   0   1   0   0   1   0   0   1   0\n\n1   0   1   1   0   0   1   0   1   0   1   1   0   0   1   0\n\n1   0   0   0   1   0   1   0   1   0   0   0   1   0   1   0\n\n1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\n\n1   0   0   1   1   0   1   0   1   0   0   1   1   0   1   0\n\n1   0   1   1   1   0   1   0   1   0   1   1   1   0   1   0\n\n1   0   0   0   0   1   1   0   1   0   0   0   0   1   1   0\n\n1   0   1   0   0   1   1   0   1   0   1   0   0   1   1   0\n\n1   0   0   1   0   1   1   0   1   0   0   1   0   1   1   0\n\n1   0   1   1   0   1   1   0   1   0   1   1   0   1   1   0\n\n1   0   0   0   1   1   1   0   1   0   0   0   1   1   1   0\n\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\n\n1   0   0   1   1   1   1   0   1   0   0   1   1   1   1   0\n\n1   0   1   1   1   1   1   0   1   0   1   1   1   1   1   0\n</pre>",
+       "data": "<pre>1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\n\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\n</pre>",
        "mime": "x-application/wolfram-language-html"
       },
       {
-       "data": "\"1   0   0   0   0   0   1   0   1   0   0   0   0   0   1   0\\n\\n1   0   1   0   0   0   1   0   1   0   1   0   0   0   1   0\\n\\n1   0   0   1   0   0   1   0   1   0   0   1   0   0   1   0\\n\\n1   0   1   1   0   0   1   0   1   0   1   1   0   0   1   0\\n\\n1   0   0   0   1   0   1   0   1   0   0   0   1   0   1   0\\n\\n1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\\n\\n1   0   0   1   1   0   1   0   1   0   0   1   1   0   1   0\\n\\n1   0   1   1   1   0   1   0   1   0   1   1   1   0   1   0\\n\\n1   0   0   0   0   1   1   0   1   0   0   0   0   1   1   0\\n\\n1   0   1   0   0   1   1   0   1   0   1   0   0   1   1   0\\n\\n1   0   0   1   0   1   1   0   1   0   0   1   0   1   1   0\\n\\n1   0   1   1   0   1   1   0   1   0   1   1   0   1   1   0\\n\\n1   0   0   0   1   1   1   0   1   0   0   0   1   1   1   0\\n\\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\\n\\n1   0   0   1   1   1   1   0   1   0   0   1   1   1   1   0\\n\\n1   0   1   1   1   1   1   0   1   0   1   1   1   1   1   0\\n\"",
+       "data": "\"1   0   1   0   1   0   1   0   1   0   1   0   1   0   1   0\\n\\n1   0   1   0   1   1   1   0   1   0   1   0   1   1   1   0\\n\"",
        "mime": "text/plain"
       }
      ],
-     "id": "0a608c35-58c4-4176-af21-44283a6da935",
+     "id": "cac00282-3f62-4451-825b-b7f1e9d0c316",
      "metadata": {
       "cellLabel": "",
       "isBoxData": false
@@ -295,48 +197,36 @@
     }
    ],
    "metadata": {},
+   "executionSummary": {
+    "timing": {
+     "startTime": 1785938332201,
+     "endTime": 1785938343918
+    },
+    "executionOrder": 9,
+    "success": true
+   }
+  },
+  {
+   "kind": 2,
+   "value": "(* maxtermsIndexes={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};\n\nmaxtermsIndexes = Range[Length[nonce]];\n\nGenerateMaxterms[indexes_List, num_] := Flatten[Map[Subsets[indexes,{#}]&, num],1];\nmaxterms = GenerateMaxterms[maxtermsIndexes,{1,2,3,4,5}];\nmaxterms = RandomSample[maxterms, 20];\nm = {{1, 1, 0}, {0, 1, 1}, {1, 1, 1}, {0, 1, 0}};\nn = {1, 0, 1, 0};\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[m, Partition[n, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nmRidotta = rref[[All, 1 ;; Last[Dimensions[m]]]]\nnRidotto = rref[[All, -1]] *)\n",
+   "languageId": "wolfram",
+   "outputs": [],
+   "metadata": {},
    "executionSummary": {}
   },
   {
    "kind": 2,
-   "value": "maxtermsIndexes={{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16}};\n\nmaxtermsIndexes = Range[Length[nonce]];\n\nGenerateMaxterms[indexes_List, num_] := Flatten[Map[Subsets[indexes,{#}]&, num],1];\nmaxterms = GenerateMaxterms[maxtermsIndexes,{1,2,3,4,5}];\nmaxterms = RandomSample[maxterms, 20];\nm = {{1, 1, 0}, {0, 1, 1}, {1, 1, 1}, {0, 1, 0}};\nn = {1, 0, 1, 0};\n\n(* 1. Crea la matrice aumentata [M | N] *)\naug = Join[m, Partition[n, 1], 2];\n\n(* 2. Riduzione modulo 2 ed eliminazione delle righe nulle *)\nrref = DeleteCases[RowReduce[aug, Modulus -> 2], {0 ..}];\n\n(* 3. Estrazione delle nuove M e N ridotte *)\nmRidotta = rref[[All, 1 ;; Last[Dimensions[m]]]]\nnRidotto = rref[[All, -1]]\n",
+   "value": "substitutionLayer[stato_] := Module[\n  {x1, x2, x3, x4, x5, trasposta, nuovaTrasposta},\n  {x1, x2, x3, x4, x5} = stato;\n  \n  (* Trasponiamo per trattare ogni colonna di 5 bit *)\n  trasposta = Transpose[{x1, x2, x3, x4, x5}];\n  \n  nuovaTrasposta = Map[Function[col,\n     Module[{b1 = col[[1]], b2 = col[[2]], b3 = col[[3]], b4 = col[[4]], b5 = col[[5]], colTrasformata},\n      \n      (* Calcoliamo la nuova colonna di 5 bit *)\n      colTrasformata = {\n        PolynomialMod[b5*b2 + b4 + b2*b3 + b3 + b1*b2 + b2 + b1, 2],\n        PolynomialMod[b5 + b3*b4 + b2*b4 + b4 + b2*b3 + b2 + b3 + b1, 2],\n        PolynomialMod[b4*b5 + b5 + b3 + b2 + 1, 2],\n        PolynomialMod[b1*b5 + b5 + b1*b4 + b4 + b3 + b2 + b1, 2],\n        PolynomialMod[b2*b5 + b5 + b4 + b1*b2 + b2, 2]\n      };\n      \n      (* Stampa: Colonna Originale -> Colonna Trasformata *)\n      Print[col, \" -> \", colTrasformata];\n      \n      (* Restituisce la colonna modificata *)\n      colTrasformata\n     ]\n    ], trasposta];\n    \n  Transpose[nuovaTrasposta]\n];\n\nsubstitutionLayer[Struct[keys, nonces]]",
    "languageId": "wolfram",
-   "outputs": [
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><wrow><w></w><wb>{</wb><wrow><w></w><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>1</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow><w>,</w><wrow><w></w><wb>{</wb><wrow><w></w><w>0</w><w>,</w><w>0</w><w>,</w><w>1</w></wrow><wb>}</wb></wrow></wrow><wb>}</wb></wrow></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "ddc4553a-034f-4e30-841a-27d7c0172b0f",
-     "metadata": {
-      "cellLabel": "Out[39]= ",
-      "isBoxData": false
-     }
-    },
-    {
-     "items": [
-      {
-       "data": "<div class=\"wexpr\"><wrow><w></w><wb>{</wb><wrow><w></w><w>1</w><w>,</w><w>0</w><w>,</w><w>0</w></wrow><wb>}</wb></wrow></div>",
-       "mime": "x-application/wolfram-language-html"
-      },
-      {
-       "data": "{1, 0, 0}",
-       "mime": "text/plain"
-      }
-     ],
-     "id": "01892c3e-d0dc-45f3-9deb-30e4d37ff770",
-     "metadata": {
-      "cellLabel": "Out[40]= ",
-      "isBoxData": false
-     }
-    }
-   ],
+   "outputs": [],
+   "metadata": {},
+   "executionSummary": {}
+  },
+  {
+   "kind": 2,
+   "value": "",
+   "languageId": "wolfram",
+   "outputs": [],
    "metadata": {},
    "executionSummary": {}
   }

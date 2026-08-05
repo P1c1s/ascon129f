@@ -2,13 +2,13 @@
 keysUnit = IdentityMatrix[16];
 
 (* Versione da usare dentro i test ... *)
-AsconNRound[key_,nonce_]:= Ascon129f [key, nonce, 1];
+AsconNRound[key_,nonce_]:= Ascon129f[key, nonce, 1];
 
 (* A partire da una lista di indici genera le varie combinazioni di grado dei maxterm *)
-GenerateMaxterms[indexes_List, degree_] := Flatten[Map[Subsets[indexes,{#}]&, degree], 1]
+GenerateMaxterms[indexes_List, degrees_List] := Flatten[Map[Subsets[indexes, {#}]&, degrees], 1]
 
-(* Prende n elemnti a caso dalla mega lista di maxterm *)
-RandomMaxterm[num_] := RandomSample[GenerateMaxterms[maxtermsIndexes,{4}], num]
+(* Restituisce num elementi a caso dalla mega lista di maxterm da un'insieme dato da tutte le combianzioni di deggress (esmepio {2,3} o {1}, ...)*)
+RandomMaxterms[num_, degrees_List] := RandomSample[GenerateMaxterms[Range[16], degrees], num]
 
 (* Genera i cubi del nonce a partire da un maxterm specifico *)
 GenCombNonce[maxterm_List] := Module[{d, zv},
@@ -29,36 +29,26 @@ MatrixOr[a_List,b_List] := Mod[a+b + a*b,2]
 
 (* Test di linearità per BLR *)
 (* Nella matrice risultante 0 -> bit con superpolinomio lineare, 1 -> bit con superpolinomio non lineare *)
-LinearityTest[key1_List,key2_List,nonce_List]:=
-Mod[
-Total[Map[AsconNRound [key1,#] &, nonce ]]+
-Total[Map[AsconNRound [key2,#]  &, nonce ]]+
-Total[Map[AsconNRound [ ConstantArray[0,Length[key]], #] &, nonce ]] +  (*alpha zero*)
-Total[Map[ AsconNRound[Mod[key1 + key2,2],#] &, nonce]]       (*elemento di ugualianza*)
+LinearityTest[key1_List, key2_List, nonce_List, nRound_] :=
+   Mod[
+   Total[Map[Ascon129f[key1, #, nRound] &, nonce ]]+
+   Total[Map[Ascon129f[key2, #, nRound]  &, nonce ]]+
+   Total[Map[Ascon129f[ConstantArray[0,Length[key]], #, nRound] &, nonce ]] +  (*alpha zero*)
+   Total[Map[Ascon129f[Mod[key1 + key2,2], #, nRound] &, nonce]]       (*elemento di ugualianza*)
 ,2]
 
 (* Genera una coppia di chiavi randomica usata nel BLR *)
 RandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1}, keyBits], RandomInteger[{0, 1}, keyBits]}, {numPairs} ];
 
 (* Test verifica linearità superpolinomio, parity check iterato più volte con stesso maxterm (Manuel Blum, Michael Luby e Ronitt Rubinfeld) *)
-(* BLR[mt_] := Fold[
-   MatrixOr, 
-   LinearityTest[#1, #2, GenCombNonce[mt]] & @@@RandomKeyPairs[16,100]
-]; *)
-
-(* Applica il BLR su diversi maxterms *)
-(* BLRAll[maxterms_] := BLR /@ maxterms
-positionZeroLista = Map[Position[#, 0] &, BLRAll[maxterms]]; *)
-
-(* Test verifica linearità superpolinomio, parity check iterato più volte con stesso maxterm (Manuel Blum, Michael Luby e Ronitt Rubinfeld) *)
 (* restitusce una lista con le posizioni dei bit lineari *)
-BLR[maxterms_List, numCoppie_Integer : 100] := Module[
+BLR[maxterms_List, nRound_,  numCoppie_Integer : 100] := Module[
    {blrSingoloMaxterm, risultatiBLRAll},
 
    (* 1. Esegue il test di linearità Blum-Luby-Rubinfeld su un singolo maxterm *)
    blrSingoloMaxterm[mt_] := Fold[
       MatrixOr,
-      LinearityTest[#1, #2, GenCombNonce[mt]] & @@@ RandomKeyPairs[16, numCoppie]
+      LinearityTest[#1, #2, GenCombNonce[mt], nRound] & @@@ RandomKeyPairs[16, numCoppie]
    ];
 
    (* 2. Applica il test BLR su ciascun maxterm della lista *)
@@ -69,7 +59,7 @@ BLR[maxterms_List, numCoppie_Integer : 100] := Module[
 ]
 
 (* Restituisce la matrice dei coefficienti del cube attack offline *)
-CubeOffline[maxterms_List, positionZeroLista_List] := Module[
+CubeOffline[maxterms_List, positionZeroLista_List, nRound_] := Module[
    {keysUnit, valutaVersoriPerNonce, valutazioniCubi},
  
    
@@ -78,9 +68,9 @@ CubeOffline[maxterms_List, positionZeroLista_List] := Module[
    
    (* 1. Funzione ausiliaria per valutare le righe di keysUnit su un dato cubo/nonce *)
    valutaVersoriPerNonce[nonce_List] := Module[{alpha0},
-      alpha0 = Mod[Total[AsconNRound[ConstantArray[0, Length[key]], #] & /@ nonce], 2];
+      alpha0 = Mod[Total[Ascon129f[ConstantArray[0, Length[key]], #, nRound] & /@ nonce], 2];
       Map[
-         Function[k, Mod[Total[AsconNRound[k, #] & /@ nonce] + alpha0, 2]],
+         Function[k, Mod[Total[Ascon129f[k, #, nRound] & /@ nonce] + alpha0, 2]],
          keysUnit
       ]
    ];
@@ -101,13 +91,13 @@ CubeOffline[maxterms_List, positionZeroLista_List] := Module[
 ]
 
 (* Calcola i termini noti associati a ciascina riga della matrice dei coefficenti ottenute con il CubeOfflne *)
-CubeOnline[key_List, maxterms_List, positionZeroLista_List] := Module[
+CubeOnline[key_List, maxterms_List, positionZeroLista_List, nRound_] := Module[
    {terminiNotiGrezzi, calcolaSingoloCube},
    
    (* Funzione ausiliaria per calcolare la matrice 5x8 del Cube per un dato insieme di nonce *)
    calcolaSingoloCube[nonce_List] := Mod[
-      Total[Map[AsconNRound[key, #] &, nonce]] + 
-      Total[Map[AsconNRound[ConstantArray[0, Length[key]], #] &, nonce]], 
+      Total[Map[Ascon129f[key, #, nRound] &, nonce]] + 
+      Total[Map[Ascon129f[ConstantArray[0, Length[key]], #, nRound] &, nonce]], 
       2
    ];
 
@@ -127,7 +117,6 @@ CubeOnline[key_List, maxterms_List, positionZeroLista_List] := Module[
 ]
 
 (* BRUTE FORCE *)
-
 BruteForce[MCridotta_, TNridotta_] := Module[
   {solParticolare, ker, combinazioniCoeff, tutteLeSoluzioni},
 
