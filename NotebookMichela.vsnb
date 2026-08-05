@@ -58,7 +58,7 @@
   },
   {
    "kind": 2,
-   "value": "plaintext = \"Testo di prova\";\n\ncyphertext = AsconEncrypt[plaintext, key, nonce];\nmsgDecifrato = AsconDecrypt[testoCifrato, key, nonce];\n\nPrint[\"Il testo in chiaro e': \", plaintext]\nPrint[\"Il testo cifrato e': \", BitsToHex[cyphertext]]\nPrint[\"Il testo decifrato e': \", BitsToString[msgDecifrato]]\n\nBitsToHexDigits[bits_List] := StringJoin[ToUpperCase[IntegerString[FromDigits[#, 2], 16, 2]] & /@ bits]",
+   "value": "plaintext = \"Testo di prova\";\nbitCifrati = AsconEncrypt[plaintext, key, nonce];\nbitDecifrati = AsconDecrypt[bitCifrati, key, nonce];\n\nPrint[\"Il testo in chiaro e': \", plaintext]\nPrint[\"I bit cifrati sono: \", bitCifrati]\nPrint[\"Cyphertext: \", BitsToString[bitCifrati]]\nPrint[\"Il testo decifrato e': \", BitsToString[bitDecifrati]]",
    "languageId": "wolfram",
    "outputs": [
     {
