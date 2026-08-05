@@ -35,6 +35,8 @@ Lo stato interno S è composto da 40 bit, organizzati in 5 parole da 8 bit ciasc
 ## Permutazioni
 Ogni round della permutazione è definito dalla composizione di tre strati: $p=p_l​\circ p_s​\circ p_c$​.
 
+![Schema ASCON 129f](ascon-round.drawio.png)
+
 ### Add Round Costant ($p_c$)
 Il primo strato effettua l'operazione di XOR tra la costante di round RCi​ e la parola $x_3$​ (la riga centrale dello stato): $x_3​\leftarrow x_3\oplus RCi$
 
@@ -55,51 +57,27 @@ Lo strato di sostituzione applica in parallelo 5 S-box su ogni colonna dello sta
 Lo strato di diffusione garantisce la dipendenza tra i bit delle parole tramite rotazioni cicliche e XOR. In Ascon-129f, le funzioni lineari $\Sigma_i$​ sono scalate per operare su parole ridotte:
 
 
-- $x_1\leftarrow\Sigma_1(y_1)=y_1+(y_1 >>>3)+(Y1 >>> 4)$
+- $x_1\leftarrow\Sigma_1(y_1)=y_1+(y_1 >>>3)+(y_1 >>> 4)$
 
-- $x_2\leftarrow\Sigma_2(y_2)=y_2+(y_2 >>>5)+(Y2 >>> 7)$
+- $x_2\leftarrow\Sigma_2(y_2)=y_2+(y_2 >>>5)+(y_2 >>> 7)$
 
-- $x_3\leftarrow\Sigma_3(y_3)=y_3+(y_3 >>>1)+(Y3 >>> 6)$
+- $x_3\leftarrow\Sigma_3(y_3)=y_3+(y_3 >>>1)+(y_3 >>> 6)$
 
-- $x_4\leftarrow\Sigma_4(y_4)=y_4+(y_4 >>>2)+(Y4 >>> 1)$
+- $x_4\leftarrow\Sigma_4(y_4)=y_4+(y_4 >>>2)+(y_4 >>> 1)$
 
-- $x_5\leftarrow\Sigma_5(y_5)=y_5+(y_5 >>>7)+(Y5 >>> 1)$
+- $x_5\leftarrow\Sigma_5(y_5)=y_5+(y_5 >>>7)+(y_5 >>> 1)$
 
 
 
 
 
 ## Fasi
+Ascon si compone di diverse macrofasi principali, tra cui le fondamentali Inizializzazione e Assorbimento.
+
+### Inizizlizzazione
+Lo stato interno $S$ è composto da 40 bit, organizzati in 5 parole da 8 bit ciascuna (anziché le 5 parole da 64 bit del modello Ascon 128a). $S=IV \parallel KEY \parallel NONCE$ sul quale viene realizzata la la permutazione $p_a$ con $a$ pari a 12 round. Usata per il warm-up nell'inizializzazione.
+
+### Assorbimento 
+Il testo in chiaro viene suddiviso in blocchi della dimensione del rate. Nel caso di Ascon-129f, il rate corrisponde a una singola parola dello stato, ovvero 8 bit. Ogni blocco di testo viene messo in XOR ($\oplus$)con la parola $x_1$. Secondo la struttura delle funzioni sponge, il risultato di questa operazione di XOR non serve solo ad aggiornare lo stato, ma diventa immediatamente il blocco di testo cifrato (ciphertext) corrispondente. Questo garantisce che il destinatario, possedendo la chiave e lo stato aggiornato, possa invertire l'operazione per recuperare il messaggio originale. Infine viene applicata l'operazione ($p_b$) con $b$ pari a 8 round, dove un numero inferiore di round permette una maggiore velocità di cifratura pur mantenendo la sicurezza grazie alla struttura "sponge".
+
 ![Schema ASCON 129f](ascon129f.drawio.png)
-
-
-- $p_a$​: è la permutazione di $a$ round con $a$ pari a 12 esegue in tutte le varianti principali (Ascon-128, Ascon-128a, Ascon-80pq). È utilizzata nelle fasi critiche di Inizializzazione (warm-up) e Finalizzazione (generazione del tag), dove è necessaria la massima sicurezza per proteggere la chiave segreta. I
-
-
-- $p_b$​: è la permutazione di $a$ round con $b$ pari 6 per Ascon-128 e Ascon-80pq, e 8 round per Ascon-128a. $pb​$ è utilizzata nelle fasi intermedie di elaborazione dei Dati Associati e del Testo in Chiaro (fase di assorbimento), dove un numero inferiore di round permette una maggiore velocità di cifratura pur mantenendo la sicurezza grazie alla struttura "sponge".
-
-### Assorbimento
-
-1. Assorbimento tramite XOR nel "Rate"
-Il testo in chiaro viene suddiviso in blocchi della dimensione del rate. Nel caso di Ascon-129f, il rate corrisponde a una singola parola dello stato, ovvero 8 bit (mentre nello standard Ascon-128 è di 64 bit),.
-
-Ogni blocco di testo (nell'immagine rappresentato dai caratteri 't', 'e', 's', 't') viene immesso nella parola x1
-​.
-L'operazione fondamentale è uno XOR ($\oplus$) tra il blocco di testo in chiaro e il valore corrente contenuto in x1
-​.
-2. Generazione del Cifrato
-Secondo la struttura delle funzioni sponge, il risultato di questa operazione di XOR non serve solo ad aggiornare lo stato, ma diventa immediatamente il blocco di testo cifrato (ciphertext) corrispondente. Questo garantisce che il destinatario, possedendo la chiave e lo stato aggiornato, possa invertire l'operazione per recuperare il messaggio originale.
-3. Mescolamento dello Stato (Permutazione pb
-​)
-Dopo che un blocco è stato assorbito e il relativo cifrato è stato prodotto, lo stato interno deve essere "rimescolato" prima di poter accogliere i successivi 8 bit,.
-
-Questo avviene applicando la permutazione pb
-​, che nel tuo schema è indicata come una sequenza di 6 Round,.
-Durante questi round, l'informazione appena introdotta in x1
-​ viene diffusa verticalmente (tramite lo strato di sostituzione ps
-​) e orizzontalmente (tramite lo strato di diffusione lineare pl
-​) in tutte e cinque le parole dello stato (x1
-​,…,x5
-​),.
-Solo dopo questo mescolamento lo stato è pronto per subire un nuovo XOR con il carattere successivo (ad esempio, passando dalla 't' alla 'e'), garantendo che ogni bit di output dipenda in modo complesso da tutti i bit di input precedenti,.
-In sintesi, il meccanismo "assorbi-permuta-assorbi" assicura che il segreto (la chiave immessa nella fase di inizializzazione) rimanga protetto mentre il messaggio viene cifrato blocco dopo blocco,
