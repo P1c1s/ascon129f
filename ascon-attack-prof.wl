@@ -14,7 +14,7 @@ RandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1
 maxtermsIndexes = Range[Length[nonce]];
 
 (* Prende n elemnti a caso dalla mega lista di maxterm *)
-RandomMaxterm[num_]:= RandomSample[GenerateMaxterms[maxtermsIndexes,{2,3}], num];
+RandomMaxterm[num_]:= RandomSample[GenerateMaxterms[maxtermsIndexes,degrees], num];
 
 maxterms = RandomMaxterm[nCandidates];
 
