@@ -38,11 +38,11 @@ Seleziona[i_, BLR_List, MC_List, TN_List] :=
         terne = Table[
             Module[{mcNuovo, tnNuovo}, 
                 mcNuovo = mc[[i, 2]];
-                tnNuovo = mc[[i, 1]] + tn[[i]];
+                tnNuovo = Mod[mc[[i, 1]] + tn[[i]], 2];
 
             {blr[[i]], mcNuovo, tnNuovo}
             ],
-            {i, 1, Length[BLR]}
+            {i, 1, Length[blr]}
         ];
         Select[terne, Test]
     ]
