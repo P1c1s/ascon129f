@@ -49,3 +49,24 @@ Seleziona[i_, BLR_List, MC_List, TN_List] :=
 
 
 MakeSistema[mt_] := Seleziona @@ {i, BLR, MC, TN}
+
+(* Nel caso si faccia la somma iniziale alpha0 + terminiNotiOnline *)
+
+Seleziona[i_, BLR_List, MC_List, TN_List] :=
+    Module[{terne, blr, mc,  tn}, 
+
+        blr = Flatten[BLR];
+        mc = Flatten[MC, 1];
+        tn = Flatten[TN];
+
+        terne = Table[
+            Module[{}, 
+            {blr[[i]], mc[[i]], tn[[i]]}
+            ],
+            {i, 1, Length[blr]}
+        ];
+        Select[terne, Test]
+    ]
+
+
+MakeSistema[mt_] := Seleziona @@ {i, BLR, MC, TN}
