@@ -1,7 +1,7 @@
 
-(** run on Mac with /Applications/Wolfram.app/Contents/MacOS/MathKernel -run "Npairs=100;<< ascon-attack-prof.wl"   **)
+(** run on Mac with /Applications/Wolfram.app/Contents/MacOS/MathKernel -run "Npairs=100;rounds=3;nCandidates=20;<< ascon-attack-prof.wl"   **)
 
-(** on linux with math -run "Npairs=100;<< ascon-attack-prof.wl"   **)
+(** on linux with math -run "Npairs=100;rounds=3;nCandidates=20;<< ascon-attack-prof.wl"   **)
 
 Get["ascon-definition.wl"];
 
@@ -14,9 +14,9 @@ RandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1
 maxtermsIndexes = Range[Length[nonce]];
 
 (* Prende n elemnti a caso dalla mega lista di maxterm *)
-RandomMaxterm[num_]:= RandomSample[GenerateMaxterms[maxtermsIndexes,{1,2,3}], num];
+RandomMaxterm[num_]:= RandomSample[GenerateMaxterms[maxtermsIndexes,{3,4,5,6,7}], num];
 
-maxterms = RandomMaxterm[20];
+maxterms = RandomMaxterm[nCandidates];
 
 KeyUnits = IdentityMatrix[16];
 (*  GENERA IL CUBO di un maxterm  *)
@@ -73,6 +73,8 @@ triple={termindexes,Transpose[{BLR[termindexes],Alpha0[termindexes],Transpose[Ma
 If[NonZeroTest[triple]=={},Print["No non-zero found"];{},triple ]
 *)
 
+(**. itera per tutti i termini candidati: quelli in cui almeno un bit supera il test di linearità**)
+
 presistema=ParallelMap[
     (
         termindexes = #;
@@ -85,11 +87,10 @@ presistema=ParallelMap[
 
   Print["Pre-sistema: ", presistema];
 
-(** AGGIUNGI QUI, a presistema LA MATRICE DEI Termini NOTI **)
-(** ATTENZIONE : presistema contiene le triple per tutti i termini quindi ragiona su una sola tripletta per volta**)
+(** AGGIUNGI QUI, a presistema per ogni elemento (la tripla associata a un candidato ad essere maxterm) LA MATRICE DEI Termini NOTI **)
+(** ATTENZIONE : presistema contiene le triple per tutti i termini candidati quindi inizialmente ragiona su una sola tripletta **)
 
 (** crea la funzione che aggiunge la matrice dei termini noti a presistema[[1]] e poi fai la Map **)
-
 
 (** TBC... **)
 

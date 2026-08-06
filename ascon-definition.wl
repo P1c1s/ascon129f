@@ -61,4 +61,4 @@ Ascon129f[key_,nonce_, rounds_]:=Fold[AsconRound[#1, #2] &, Struct[key,nonce], R
 (*ATTACCO*)
 
 (* Versione da usare dentro i test ... *)
-AsconNRound[key_,nonce_]:=Ascon129f [key, nonce, 3];
+AsconNRound[key_,nonce_]:=Ascon129f [key, nonce, rounds ];
