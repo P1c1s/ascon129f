@@ -1,3 +1,23 @@
+
+(** run on Mac with /Applications/Wolfram.app/Contents/MacOS/MathKernel -run "Npairs=100;<< ascon-attack-prof.wl"   **)
+
+(** on linux with math -run "Npairs=100;<< ascon-attack-prof.wl"   **)
+
+Get["ascon-definition.wl"];
+
+
+(* A partire da una lista di indici genera le varie combinazioni di grado dei maxterm *)
+GenerateMaxterms[indexes_List, degree_] := Flatten[Map[Subsets[indexes,{#}]&, degree], 1];
+RandomKeyPairs[keyBits_Integer, numPairs_Integer] := Table[ {RandomInteger[{0, 1}, keyBits], RandomInteger[{0, 1}, keyBits]}, {numPairs} ];
+
+
+maxtermsIndexes = Range[Length[nonce]];
+
+(* Prende n elemnti a caso dalla mega lista di maxterm *)
+RandomMaxterm[num_]:= RandomSample[GenerateMaxterms[maxtermsIndexes,{1,2,3}], num];
+
+maxterms = RandomMaxterm[20];
+
 KeyUnits = IdentityMatrix[16];
 (*  GENERA IL CUBO di un maxterm  *)
 GenCombNonce[maxterm_List] := Module[{d, zv},
@@ -18,13 +38,17 @@ LinearityTest[key1_List,key2_List,nonce_List]:=
         Total[Map[AsconNRound[key1,#] &, nonce ]]+
         Total[Map[AsconNRound[key2,#] &, nonce ]]+
         Total[Map[AsconNRound[ ConstantArray[0,Length[key]], #] &, nonce ]] +  (*alpha zero*)
-        Total[Map[AsconNRound[Mod[key1 + key2,2],#] &, nonce]]       (*elelmento di ugualianza*)
+        Total[Map[AsconNRound[Mod[key1 + key2,2],#] &, nonce]]       (*elemento di ugualianza*)
     ,2];
 
+(* Operotore "Somma" dei test *)
+MatrixOr[a_List,b_List] := Mod[a+b + a*b,2];
+
 BLR[mt_] := Fold[
-   MatrixOr, 
-   LinearityTest[#1, #2, GenCombNonce[mt]] & @@@RandomKeyPairs[16,Npairs];
+   MatrixOr,
+   LinearityTest[#1, #2, GenCombNonce[mt]] & @@@RandomKeyPairs[16,Npairs]
 ];
+
 MakeCube[indexes_List]:=GenCombNonce[indexes];
 Alpha0[termindexes_]:=Mod[Plus@@Map[AsconNRound[Array[0&,16],#]&,MakeCube[termindexes]],2] ;
 Alpha[termindexes_][kindex_]:=Mod[Plus@@Map[AsconNRound[KeyUnits[[kindex]],#]&,MakeCube[termindexes]]+Alpha0[termindexes]  ,2]
@@ -39,17 +63,40 @@ NonZeroTest[triple_]:=Module[{ft},
                             Select[ft,(#[[1]]==0)&&(Plus@@#[[3]]>0)&]
                         )];
 
-candidates=Select[maxterms, LinearityTest[#] == 0 &]
+(** Mantieni solo i termini con superpolinomio lineare-affine **)
 
+candidates=Select[maxterms, LinearityTest[#] == 0 &];
+
+(*
 termindexes = candidates[[3]];
 triple={termindexes,Transpose[{BLR[termindexes],Alpha0[termindexes],Transpose[Map[Alpha[termindexes],Range[1,16]],2]},2]};
 If[NonZeroTest[triple]=={},Print["No non-zero found"];{},triple ]
+*)
 
-pre-sistema=Map[
+presistema=ParallelMap[
     (
         termindexes = #;
-        triple={termindexes,
-                Transpose[{BLR[termindexes],Alpha0[termindexes],Transpose[Map[Alpha[termindexes],Range[1,16]],2]},2]};
+        triple={BLR[termindexes],Alpha0[termindexes],Transpose[Map[Alpha[termindexes],Range[1,16]],{3,1,2}]};
+        newtriple={termindexes,Transpose[triple,{3,2,1}]};
 
-        If[NonZeroTest[triple]=={},Print["No non-zero found"];{},triple ]
-    )&, candidates]
+        (** mantieni solo i termini con superpolinomio non costante **)
+        If[NonZeroTest[newtriple]=={},Print["No non-zero found"];{},newtriple ]
+    )&, candidates];
+
+  Print["Pre-sistema: ", presistema];
+
+(** AGGIUNGI QUI, a presistema LA MATRICE DEI Termini NOTI **)
+(** ATTENZIONE : presistema contiene le triple per tutti i termini quindi ragiona su una sola tripletta per volta**)
+
+(** crea la funzione che aggiunge la matrice dei termini noti a presistema[[1]] e poi fai la Map **)
+
+
+(** TBC... **)
+
+
+(**  qui sotto non dovresti cambiare nulla se non risolvere il sistema **)
+
+  GetSistema[tripla_]:=Select[If[tripla=={},{},Join@@(tripla[[2]])],#[[1]]==0&&Plus@@#[[3]]>0&];
+
+  sistema=Join@@Map[GetSistema, presistema];
+  Print["Sistema: ", sistema, "\n con ", Length[sistema], " equazioni, di rango ", MatrixRank[Map[Last,sistema],Modulus->2]  ];
